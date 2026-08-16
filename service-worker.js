@@ -1,4 +1,4 @@
-const CACHE_NAME = "adf-prep-v1";
+const CACHE_NAME = "adf-prep-v2";
 const ASSETS = [
   "./",
   "./index.html",

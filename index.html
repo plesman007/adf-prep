@@ -26,6 +26,7 @@
     --gold-bright:#96691f;
     --red:#b3492f;
     --green:#3f7a50;
+    --blue:#3a6ea5;
     --shadow: 0 10px 26px rgba(32,45,25,0.09);
     --radius: 3px;
     --overlay-rgb: 32,45,25;
@@ -41,6 +42,7 @@
     --gold-bright:#e0b559;
     --red:#9a4436;
     --green:#5c8a54;
+    --blue:#6f9fd8;
     --shadow: 0 10px 30px rgba(0,0,0,0.35);
     --overlay-rgb: 0,0,0;
   }
@@ -237,6 +239,41 @@
   table.log td:first-child{ color:var(--paper); font-family:'IBM Plex Mono', monospace; }
   .del-btn{ background:none; border:none; color:var(--red); cursor:pointer; font-size:14px; }
 
+  .chart-legend{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+  .legend-pill{
+    display:flex; align-items:center; gap:6px; font-family:'IBM Plex Mono', monospace; font-size:11.5px;
+    letter-spacing:0.03em; color:var(--paper-dim); border:1px solid var(--line); border-radius:14px;
+    padding:5px 11px; cursor:pointer; user-select:none; transition:opacity .15s, border-color .15s;
+  }
+  .legend-pill input{ accent-color: currentColor; cursor:pointer; }
+  .legend-pill.off{ opacity:0.4; }
+  .legend-pill[data-metric="pushups"]{ color: var(--gold-bright); }
+  .legend-pill[data-metric="situps"]{ color: var(--green); }
+  .legend-pill[data-metric="beep"]{ color: var(--blue); }
+
+  .chart-wrap{ position:relative; }
+  #fitnessChart{ width:100%; height:auto; display:block; overflow:visible; }
+  #fitnessChart .grid-line{ stroke: var(--line); stroke-width:1; }
+  #fitnessChart .target-line{ stroke: var(--paper-dim); stroke-width:1; stroke-dasharray:4 4; opacity:0.6; }
+  #fitnessChart .axis-label{ font-family:'IBM Plex Mono', monospace; font-size:9px; fill: var(--paper-dim); }
+  #fitnessChart .metric-line{ fill:none; stroke-width:2.5; transition: opacity .15s; }
+  #fitnessChart .metric-point{ cursor:pointer; transition: r .1s; }
+  #fitnessChart .metric-point:hover, #fitnessChart .metric-point.active{ r:6; }
+  #fitnessChart .baseline-dot{ stroke: var(--panel); stroke-width:2; }
+
+  .chart-tooltip{
+    position:absolute; pointer-events:none; opacity:0; transition:opacity .1s;
+    background: var(--paper); color: var(--panel); font-family:'IBM Plex Mono', monospace; font-size:11.5px;
+    padding:8px 10px; border-radius:3px; white-space:nowrap; transform: translate(-50%, -115%); z-index:5;
+    box-shadow: var(--shadow); line-height:1.5;
+  }
+  .chart-tooltip.show{ opacity:1; }
+  .chart-tooltip strong{ display:block; margin-bottom:2px; }
+
+  .chart-summary{ font-size:13.5px; color:var(--paper); margin: 14px 0 4px; }
+  .chart-summary strong{ color: var(--gold-bright); }
+  .chart-caption{ font-size:11.5px; color:var(--paper-dim); margin: 0 0 18px; }
+
   /* checklist */
   .checklist-group{ margin-bottom: 18px; }
   .check-item{
@@ -381,13 +418,29 @@
       <button class="primary" id="logBtn">Save today's session</button>
       <span class="save-flash" id="fitFlash">Saved</span>
 
-      <details class="details-card" style="margin-top:20px;">
+      <details class="details-card" style="margin-top:20px;" id="historyDetails">
         <summary><h3 style="display:inline; margin:0;">Session history</h3></summary>
+
+        <div id="chartBlock" style="display:none;">
+          <div class="chart-legend" id="chartLegend">
+            <label class="legend-pill" data-metric="pushups"><input type="checkbox" checked> Push-ups</label>
+            <label class="legend-pill" data-metric="situps"><input type="checkbox" checked> Sit-ups</label>
+            <label class="legend-pill" data-metric="beep"><input type="checkbox" checked> Beep test</label>
+          </div>
+          <div class="chart-wrap">
+            <svg id="fitnessChart" viewBox="0 0 620 220" preserveAspectRatio="xMidYMid meet"></svg>
+            <div class="chart-tooltip" id="chartTooltip"></div>
+          </div>
+          <p class="chart-summary" id="chartSummary"></p>
+          <p class="chart-caption">Dashed line marks your target for each exercise. Hover or tap a point for that session's numbers.</p>
+        </div>
+
         <table class="log" id="logTable">
           <thead><tr><th>Date</th><th>Push-ups</th><th>Sit-ups</th><th>Beep</th><th>Run</th><th></th></tr></thead>
           <tbody id="logBody"></tbody>
         </table>
         <p id="logEmpty" style="display:none;">No sessions logged yet — your first entry starts the trend line.</p>
+        <p id="logOne" style="display:none;">Nice, your baseline is set. Log one more session to start seeing a trend.</p>
       </details>
     </div>
   </div>
@@ -568,7 +621,10 @@ function renderFitness(){
 
   const body = document.getElementById('logBody');
   body.innerHTML = "";
-  document.getElementById('logEmpty').style.display = state.fitnessLogs.length ? 'none' : 'block';
+  const n = state.fitnessLogs.length;
+  document.getElementById('logEmpty').style.display = n === 0 ? 'block' : 'none';
+  document.getElementById('logOne').style.display = n === 1 ? 'block' : 'none';
+  document.getElementById('chartBlock').style.display = n >= 2 ? 'block' : 'none';
   state.fitnessLogs.forEach((log, idx)=>{
     const tr = document.createElement('tr');
     tr.innerHTML = `<td>${log.date}</td><td>${log.pushups}</td><td>${log.situps}</td><td>${log.beep}</td><td>${log.run || '—'}</td>
@@ -581,7 +637,116 @@ function renderFitness(){
       saveFitness(); renderFitness(); renderReadiness();
     });
   });
+  if(n >= 2) renderChart();
 }
+
+// ---------- Trend chart ----------
+let activeMetrics = { pushups: true, situps: true, beep: true };
+
+function formatShortDate(dateStr){
+  const d = new Date(dateStr + "T00:00:00");
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+function fmtDelta(n, decimals){
+  const v = decimals ? Number(n.toFixed(decimals)) : Math.round(n);
+  return (v >= 0 ? '+' : '') + v;
+}
+
+function renderChart(){
+  const svg = document.getElementById('fitnessChart');
+  const logs = [...state.fitnessLogs].reverse(); // oldest first
+  if(logs.length < 2) return;
+
+  const t = TARGETS[state.profile.genderProfile];
+  const W = 620, H = 220, padL = 30, padR = 12, padT = 14, padB = 26;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const CAP = 1.4;
+
+  function yFor(value, target){
+    const frac = Math.min((value || 0) / target, CAP);
+    return padT + plotH - (frac / CAP) * plotH;
+  }
+  function xFor(i){ return logs.length === 1 ? padL : padL + (i / (logs.length - 1)) * plotW; }
+
+  const metricsConf = [
+    { key:'pushups', label:'Push-ups', color:'var(--gold-bright)', target: t.pushups },
+    { key:'situps', label:'Sit-ups', color:'var(--green)', target: t.situps },
+    { key:'beep', label:'Beep test', color:'var(--blue)', target: t.beep }
+  ];
+
+  const zeroY = padT + plotH;
+  const target100Y = padT + plotH - (1 / CAP) * plotH;
+  let parts = [];
+  parts.push(`<line class="grid-line" x1="${padL}" y1="${zeroY}" x2="${W - padR}" y2="${zeroY}"></line>`);
+  parts.push(`<line class="target-line" x1="${padL}" y1="${target100Y}" x2="${W - padR}" y2="${target100Y}"></line>`);
+  parts.push(`<text class="axis-label" x="${W - padR}" y="${target100Y - 5}" text-anchor="end">Target</text>`);
+
+  logs.forEach((log, i) => {
+    if(i === 0 || i === logs.length - 1){
+      const x = xFor(i);
+      const anchor = i === 0 ? 'start' : 'end';
+      parts.push(`<text class="axis-label" x="${x}" y="${H - 6}" text-anchor="${anchor}">${formatShortDate(log.date)}</text>`);
+    }
+  });
+
+  metricsConf.forEach(m => {
+    if(!activeMetrics[m.key]) return;
+    const pts = logs.map((log, i) => `${xFor(i)},${yFor(log[m.key], m.target)}`).join(' ');
+    parts.push(`<polyline class="metric-line" points="${pts}" style="stroke:${m.color}"></polyline>`);
+    logs.forEach((log, i) => {
+      const cx = xFor(i), cy = yFor(log[m.key], m.target);
+      const isFirst = i === 0;
+      parts.push(`<circle class="metric-point${isFirst ? ' baseline-dot' : ''}" cx="${cx}" cy="${cy}" r="4" style="fill:${m.color}" data-metric="${m.key}" data-idx="${i}"></circle>`);
+    });
+  });
+
+  svg.innerHTML = parts.join('');
+
+  const tooltip = document.getElementById('chartTooltip');
+  const wrap = svg.parentElement;
+  svg.querySelectorAll('.metric-point').forEach(pt => {
+    const metric = pt.dataset.metric;
+    const idx = parseInt(pt.dataset.idx);
+    const log = logs[idx];
+    const first = logs[0];
+    const conf = metricsConf.find(m => m.key === metric);
+    const value = log[metric] || 0;
+    const delta = value - (first[metric] || 0);
+    const deltaStr = idx === 0 ? "Baseline" : fmtDelta(delta, metric === 'beep' ? 1 : 0) + " vs first session";
+
+    function showTip(evt){
+      const rect = wrap.getBoundingClientRect();
+      const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+      const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+      tooltip.style.left = (clientX - rect.left) + 'px';
+      tooltip.style.top = (clientY - rect.top) + 'px';
+      tooltip.innerHTML = `<strong>${conf.label} — ${formatShortDate(log.date)}</strong>${value} · ${deltaStr}`;
+      tooltip.classList.add('show');
+      svg.querySelectorAll('.metric-point.active').forEach(p => p.classList.remove('active'));
+      pt.classList.add('active');
+    }
+    pt.addEventListener('mouseenter', showTip);
+    pt.addEventListener('mousemove', showTip);
+    pt.addEventListener('mouseleave', () => { tooltip.classList.remove('show'); pt.classList.remove('active'); });
+    pt.addEventListener('touchstart', (e) => { e.preventDefault(); showTip(e); });
+  });
+
+  const first = logs[0], last = logs[logs.length - 1];
+  document.getElementById('chartSummary').innerHTML =
+    `Since your first session (${formatShortDate(first.date)}): ` +
+    `<strong>${fmtDelta(last.pushups - first.pushups)} push-ups</strong>, ` +
+    `<strong>${fmtDelta(last.situps - first.situps)} sit-ups</strong>, ` +
+    `<strong>${fmtDelta(last.beep - first.beep, 1)} beep level</strong>.`;
+}
+
+document.querySelectorAll('.legend-pill').forEach(pill => {
+  pill.querySelector('input').addEventListener('change', (e) => {
+    const metric = pill.dataset.metric;
+    activeMetrics[metric] = e.target.checked;
+    pill.classList.toggle('off', !e.target.checked);
+    renderChart();
+  });
+});
 
 document.getElementById('logBtn').addEventListener('click', ()=>{
   const pushups = parseInt(document.getElementById('fPushups').value)||0;
