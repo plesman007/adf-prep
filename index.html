@@ -239,39 +239,22 @@
   table.log td:first-child{ color:var(--paper); font-family:'IBM Plex Mono', monospace; }
   .del-btn{ background:none; border:none; color:var(--red); cursor:pointer; font-size:14px; }
 
-  .chart-legend{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
-  .legend-pill{
-    display:flex; align-items:center; gap:6px; font-family:'IBM Plex Mono', monospace; font-size:11.5px;
-    letter-spacing:0.03em; color:var(--paper-dim); border:1px solid var(--line); border-radius:14px;
-    padding:5px 11px; cursor:pointer; user-select:none; transition:opacity .15s, border-color .15s;
-  }
-  .legend-pill input{ accent-color: currentColor; cursor:pointer; }
-  .legend-pill.off{ opacity:0.4; }
-  .legend-pill[data-metric="pushups"]{ color: var(--gold-bright); }
-  .legend-pill[data-metric="situps"]{ color: var(--green); }
-  .legend-pill[data-metric="beep"]{ color: var(--blue); }
+  .stat-cards{ display:grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap:10px; margin-bottom:18px; }
+  .stat-card{ background:var(--panel-raised); border:1px solid var(--line); border-radius:var(--radius); padding:12px 14px; }
+  .stat-card label{ display:block; font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:var(--paper-dim); margin-bottom:5px; }
+  .stat-card .before-after{ font-family:'IBM Plex Mono', monospace; font-size:19px; color:var(--paper); }
+  .stat-card .before-after .arrow{ color:var(--gold-bright); margin:0 2px; }
+  .stat-card .delta{ font-size:12px; margin-top:3px; }
 
-  .chart-wrap{ position:relative; }
-  #fitnessChart{ width:100%; height:auto; display:block; overflow:visible; }
-  #fitnessChart .grid-line{ stroke: var(--line); stroke-width:1; }
-  #fitnessChart .target-line{ stroke: var(--paper-dim); stroke-width:1; stroke-dasharray:4 4; opacity:0.6; }
-  #fitnessChart .axis-label{ font-family:'IBM Plex Mono', monospace; font-size:9px; fill: var(--paper-dim); }
-  #fitnessChart .metric-line{ fill:none; stroke-width:2.5; transition: opacity .15s; }
-  #fitnessChart .metric-point{ cursor:pointer; transition: r .1s; }
-  #fitnessChart .metric-point:hover, #fitnessChart .metric-point.active{ r:6; }
-  #fitnessChart .baseline-dot{ stroke: var(--panel); stroke-width:2; }
+  .ring-row{ display:flex; gap:16px; flex-wrap:wrap; justify-content:space-around; margin: 4px 0 14px; }
+  .ring-item{ text-align:center; }
+  .ring-item svg{ display:block; }
+  .ring-item .ring-track{ fill:none; stroke:var(--line); stroke-width:8; }
+  .ring-item .ring-fill{ fill:none; stroke-width:8; stroke-linecap:round; transition: stroke-dashoffset .4s ease; }
+  .ring-item .ring-pct{ font-family:'IBM Plex Mono', monospace; font-size:15px; fill:var(--paper); }
+  .ring-item .ring-sub{ font-family:'IBM Plex Mono', monospace; font-size:8.5px; fill:var(--paper-dim); }
+  .ring-item .ring-label{ font-size:11px; color:var(--paper-dim); margin-top:4px; }
 
-  .chart-tooltip{
-    position:absolute; pointer-events:none; opacity:0; transition:opacity .1s;
-    background: var(--paper); color: var(--panel); font-family:'IBM Plex Mono', monospace; font-size:11.5px;
-    padding:8px 10px; border-radius:3px; white-space:nowrap; transform: translate(-50%, -115%); z-index:5;
-    box-shadow: var(--shadow); line-height:1.5;
-  }
-  .chart-tooltip.show{ opacity:1; }
-  .chart-tooltip strong{ display:block; margin-bottom:2px; }
-
-  .chart-summary{ font-size:13.5px; color:var(--paper); margin: 14px 0 4px; }
-  .chart-summary strong{ color: var(--gold-bright); }
   .chart-caption{ font-size:11.5px; color:var(--paper-dim); margin: 0 0 18px; }
 
   /* checklist */
@@ -422,17 +405,9 @@
         <summary><h3 style="display:inline; margin:0;">Session history</h3></summary>
 
         <div id="chartBlock" style="display:none;">
-          <div class="chart-legend" id="chartLegend">
-            <label class="legend-pill" data-metric="pushups"><input type="checkbox" checked> Push-ups</label>
-            <label class="legend-pill" data-metric="situps"><input type="checkbox" checked> Sit-ups</label>
-            <label class="legend-pill" data-metric="beep"><input type="checkbox" checked> Beep test</label>
-          </div>
-          <div class="chart-wrap">
-            <svg id="fitnessChart" viewBox="0 0 620 220" preserveAspectRatio="xMidYMid meet"></svg>
-            <div class="chart-tooltip" id="chartTooltip"></div>
-          </div>
-          <p class="chart-summary" id="chartSummary"></p>
-          <p class="chart-caption">Dashed line marks your target for each exercise. Hover or tap a point for that session's numbers.</p>
+          <div class="stat-cards" id="statCards"></div>
+          <div class="ring-row" id="ringRow"></div>
+          <p class="chart-caption">Rings show how close your latest session is to target. Cards show your change since session 1.</p>
         </div>
 
         <table class="log" id="logTable">
@@ -637,12 +612,10 @@ function renderFitness(){
       saveFitness(); renderFitness(); renderReadiness();
     });
   });
-  if(n >= 2) renderChart();
+  if(n >= 2) renderProgress();
 }
 
-// ---------- Trend chart ----------
-let activeMetrics = { pushups: true, situps: true, beep: true };
-
+// ---------- Progress: stat cards + rings ----------
 function formatShortDate(dateStr){
   const d = new Date(dateStr + "T00:00:00");
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
@@ -652,101 +625,50 @@ function fmtDelta(n, decimals){
   return (v >= 0 ? '+' : '') + v;
 }
 
-function renderChart(){
-  const svg = document.getElementById('fitnessChart');
-  const logs = [...state.fitnessLogs].reverse(); // oldest first
+function renderProgress(){
+  const logs = state.fitnessLogs; // newest first
   if(logs.length < 2) return;
 
   const t = TARGETS[state.profile.genderProfile];
-  const W = 620, H = 220, padL = 30, padR = 12, padT = 14, padB = 26;
-  const plotW = W - padL - padR, plotH = H - padT - padB;
-  const CAP = 1.4;
-
-  function yFor(value, target){
-    const frac = Math.min((value || 0) / target, CAP);
-    return padT + plotH - (frac / CAP) * plotH;
-  }
-  function xFor(i){ return logs.length === 1 ? padL : padL + (i / (logs.length - 1)) * plotW; }
+  const latest = logs[0];
+  const first = logs[logs.length - 1];
 
   const metricsConf = [
-    { key:'pushups', label:'Push-ups', color:'var(--gold-bright)', target: t.pushups },
-    { key:'situps', label:'Sit-ups', color:'var(--green)', target: t.situps },
-    { key:'beep', label:'Beep test', color:'var(--blue)', target: t.beep }
+    { key:'pushups', label:'Push-ups', color:'var(--gold-bright)', target: t.pushups, decimals: 0 },
+    { key:'situps', label:'Sit-ups', color:'var(--green)', target: t.situps, decimals: 0 },
+    { key:'beep', label:'Beep test', color:'var(--blue)', target: t.beep, decimals: 1 }
   ];
 
-  const zeroY = padT + plotH;
-  const target100Y = padT + plotH - (1 / CAP) * plotH;
-  let parts = [];
-  parts.push(`<line class="grid-line" x1="${padL}" y1="${zeroY}" x2="${W - padR}" y2="${zeroY}"></line>`);
-  parts.push(`<line class="target-line" x1="${padL}" y1="${target100Y}" x2="${W - padR}" y2="${target100Y}"></line>`);
-  parts.push(`<text class="axis-label" x="${W - padR}" y="${target100Y - 5}" text-anchor="end">Target</text>`);
+  const cardsHtml = metricsConf.map(m => {
+    const before = first[m.key] || 0;
+    const after = latest[m.key] || 0;
+    const delta = fmtDelta(after - before, m.decimals);
+    return `<div class="stat-card">
+      <label>${m.label}</label>
+      <div class="before-after">${before}<span class="arrow">&#8594;</span>${after}</div>
+      <div class="delta" style="color:${m.color}">${delta} since session 1</div>
+    </div>`;
+  }).join('');
+  document.getElementById('statCards').innerHTML = cardsHtml;
 
-  logs.forEach((log, i) => {
-    if(i === 0 || i === logs.length - 1){
-      const x = xFor(i);
-      const anchor = i === 0 ? 'start' : 'end';
-      parts.push(`<text class="axis-label" x="${x}" y="${H - 6}" text-anchor="${anchor}">${formatShortDate(log.date)}</text>`);
-    }
-  });
-
-  metricsConf.forEach(m => {
-    if(!activeMetrics[m.key]) return;
-    const pts = logs.map((log, i) => `${xFor(i)},${yFor(log[m.key], m.target)}`).join(' ');
-    parts.push(`<polyline class="metric-line" points="${pts}" style="stroke:${m.color}"></polyline>`);
-    logs.forEach((log, i) => {
-      const cx = xFor(i), cy = yFor(log[m.key], m.target);
-      const isFirst = i === 0;
-      parts.push(`<circle class="metric-point${isFirst ? ' baseline-dot' : ''}" cx="${cx}" cy="${cy}" r="4" style="fill:${m.color}" data-metric="${m.key}" data-idx="${i}"></circle>`);
-    });
-  });
-
-  svg.innerHTML = parts.join('');
-
-  const tooltip = document.getElementById('chartTooltip');
-  const wrap = svg.parentElement;
-  svg.querySelectorAll('.metric-point').forEach(pt => {
-    const metric = pt.dataset.metric;
-    const idx = parseInt(pt.dataset.idx);
-    const log = logs[idx];
-    const first = logs[0];
-    const conf = metricsConf.find(m => m.key === metric);
-    const value = log[metric] || 0;
-    const delta = value - (first[metric] || 0);
-    const deltaStr = idx === 0 ? "Baseline" : fmtDelta(delta, metric === 'beep' ? 1 : 0) + " vs first session";
-
-    function showTip(evt){
-      const rect = wrap.getBoundingClientRect();
-      const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
-      const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
-      tooltip.style.left = (clientX - rect.left) + 'px';
-      tooltip.style.top = (clientY - rect.top) + 'px';
-      tooltip.innerHTML = `<strong>${conf.label} — ${formatShortDate(log.date)}</strong>${value} · ${deltaStr}`;
-      tooltip.classList.add('show');
-      svg.querySelectorAll('.metric-point.active').forEach(p => p.classList.remove('active'));
-      pt.classList.add('active');
-    }
-    pt.addEventListener('mouseenter', showTip);
-    pt.addEventListener('mousemove', showTip);
-    pt.addEventListener('mouseleave', () => { tooltip.classList.remove('show'); pt.classList.remove('active'); });
-    pt.addEventListener('touchstart', (e) => { e.preventDefault(); showTip(e); });
-  });
-
-  const first = logs[0], last = logs[logs.length - 1];
-  document.getElementById('chartSummary').innerHTML =
-    `Since your first session (${formatShortDate(first.date)}): ` +
-    `<strong>${fmtDelta(last.pushups - first.pushups)} push-ups</strong>, ` +
-    `<strong>${fmtDelta(last.situps - first.situps)} sit-ups</strong>, ` +
-    `<strong>${fmtDelta(last.beep - first.beep, 1)} beep level</strong>.`;
+  const R = 38, C = 2 * Math.PI * R;
+  const ringsHtml = metricsConf.map(m => {
+    const value = latest[m.key] || 0;
+    const pct = Math.round((value / m.target) * 100);
+    const dashPct = Math.min(pct, 100);
+    const offset = C * (1 - dashPct / 100);
+    return `<div class="ring-item">
+      <svg width="92" height="92" viewBox="0 0 92 92">
+        <circle class="ring-track" cx="46" cy="46" r="${R}"></circle>
+        <circle class="ring-fill" cx="46" cy="46" r="${R}" style="stroke:${m.color}" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${offset.toFixed(1)}" transform="rotate(-90 46 46)"></circle>
+        <text class="ring-pct" x="46" y="42" text-anchor="middle">${pct}%</text>
+        <text class="ring-sub" x="46" y="58" text-anchor="middle">of target</text>
+      </svg>
+      <div class="ring-label">${m.label}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('ringRow').innerHTML = ringsHtml;
 }
-
-document.querySelectorAll('.legend-pill').forEach(pill => {
-  pill.querySelector('input').addEventListener('change', (e) => {
-    const metric = pill.dataset.metric;
-    activeMetrics[metric] = e.target.checked;
-    pill.classList.toggle('off', !e.target.checked);
-    renderChart();
-  });
-});
 
 document.getElementById('logBtn').addEventListener('click', ()=>{
   const pushups = parseInt(document.getElementById('fPushups').value)||0;
