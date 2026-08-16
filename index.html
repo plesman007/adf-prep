@@ -143,7 +143,13 @@
   .bar-fill{ height:100%; background: linear-gradient(90deg, var(--red), var(--gold), var(--green)); width:0%; transition:width .4s ease;}
 
   /* ---------- Tabs ---------- */
-  .tabs{ display:flex; gap:4px; margin-bottom:18px; flex-wrap:wrap; border-bottom:1px solid var(--line); }
+  html{ scroll-behavior: smooth; }
+
+  .tabs{
+    display:flex; gap:4px; margin-bottom:18px; flex-wrap:wrap; border-bottom:1px solid var(--line);
+    position:sticky; top:0; z-index:20; background:var(--bg); transition: box-shadow .2s ease;
+  }
+  .tabs.stuck{ box-shadow: 0 6px 16px rgba(0,0,0,0.12); border-bottom-color: transparent; }
   .tab-btn{
     font-family:'Oswald', sans-serif; text-transform:uppercase; letter-spacing:0.04em; font-weight:500;
     font-size:13px; color:var(--paper-dim); background:transparent; border:none; cursor:pointer;
@@ -158,8 +164,9 @@
 
   .card{
     background:var(--panel); border:1px solid var(--line); border-radius: var(--radius);
-    padding: 20px 22px; margin-bottom:16px;
+    padding: 20px 22px; margin-bottom:16px; transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
   }
+  .card:hover{ transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--gold); }
   .card h2{
     font-family:'Oswald', sans-serif; font-weight:600; text-transform:uppercase; letter-spacing:0.03em;
     font-size:17px; margin:0 0 6px; color:var(--gold-bright);
@@ -355,6 +362,33 @@
 
   footer{ text-align:center; color:var(--paper-dim); font-size:11.5px; margin-top: 28px; font-family:'IBM Plex Mono', monospace; opacity:0.6; }
 
+  .float-stack{ position:fixed; right:18px; bottom:18px; display:flex; flex-direction:column; gap:10px; z-index:30; }
+  .float-btn{
+    width:48px; height:48px; border-radius:50%; border:none; background:var(--gold); color:#000;
+    font-size:18px; cursor:pointer; box-shadow:0 6px 18px rgba(0,0,0,0.25); transition: transform .15s, filter .15s;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .float-btn:hover{ transform: translateY(-2px); filter:brightness(0.92); }
+
+  .quick-panel{
+    position:fixed; right:18px; bottom:80px; width:min(280px, calc(100vw - 36px)); background:var(--panel);
+    border:1px solid var(--line); border-radius:var(--radius); box-shadow:0 12px 30px rgba(0,0,0,0.3);
+    z-index:30; display:none; overflow:hidden;
+  }
+  .quick-panel.open{ display:block; }
+  .quick-panel-header{
+    display:flex; justify-content:space-between; align-items:center; background:var(--gold); color:#000;
+    font-family:'Oswald', sans-serif; text-transform:uppercase; font-weight:700; font-size:12.5px;
+    letter-spacing:0.05em; padding:12px 14px;
+  }
+  .quick-close{ background:none; border:none; color:#000; font-size:18px; line-height:1; cursor:pointer; }
+  .quick-item{
+    display:block; width:100%; text-align:left; background:none; border:none; border-bottom:1px solid var(--line);
+    color:var(--paper); font-family:'IBM Plex Sans', sans-serif; font-size:13.5px; padding:12px 14px; cursor:pointer;
+  }
+  .quick-item:last-child{ border-bottom:none; }
+  .quick-item:hover{ background:var(--panel-raised); color:var(--gold-bright); }
+
   @media (max-width:520px){
     h1{font-size:24px;}
     .ledger-top{flex-direction:column;}
@@ -399,7 +433,7 @@
     </div>
   </div>
 
-  <div class="tabs">
+  <div class="tabs" id="tabsBar">
     <button class="tab-btn active" data-tab="overview">Pathway</button>
     <button class="tab-btn" data-tab="steps">Steps</button>
     <button class="tab-btn" data-tab="fitness">Fitness</button>
@@ -633,6 +667,22 @@
   </div>
 
   <footer>An unofficial, personal prep tool — not affiliated with, endorsed by, or produced by Defence Force Recruiting or the ADF. Styled to look familiar, nothing more. Data stays on this device only. Always verify official requirements with ADF Careers / PNG Department of Defence.</footer>
+</div>
+
+<div class="quick-panel" id="quickPanel">
+  <div class="quick-panel-header">
+    <span>Quick actions</span>
+    <button class="quick-close" id="quickClose">&times;</button>
+  </div>
+  <button class="quick-item" data-goto="fitness">Log a fitness session</button>
+  <button class="quick-item" data-goto="checklist">Check off a document</button>
+  <button class="quick-item" data-goto="quiz">Start the aptitude test</button>
+  <button class="quick-item" data-goto="steps">Review the steps to join</button>
+</div>
+
+<div class="float-stack">
+  <button class="float-btn" id="quickToggle" title="Quick actions" aria-label="Quick actions">&#9776;</button>
+  <button class="float-btn" id="backToTop" title="Back to top" aria-label="Back to top" style="display:none;">&#8593;</button>
 </div>
 
 <script>
@@ -1693,6 +1743,35 @@ function render(){
 }
 
 loadState();
+
+// ---------- Sticky nav + back-to-top (ADF Careers-style scroll behaviour) ----------
+window.addEventListener('scroll', () => {
+  const scrolled = window.scrollY > 40;
+  document.getElementById('tabsBar').classList.toggle('stuck', scrolled);
+  document.getElementById('backToTop').style.display = window.scrollY > 400 ? 'flex' : 'none';
+}, { passive: true });
+
+document.getElementById('backToTop').addEventListener('click', () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// ---------- Quick actions drawer (ADF Careers "shortlist"-style floating panel) ----------
+const quickPanel = document.getElementById('quickPanel');
+document.getElementById('quickToggle').addEventListener('click', () => {
+  quickPanel.classList.toggle('open');
+});
+document.getElementById('quickClose').addEventListener('click', () => {
+  quickPanel.classList.remove('open');
+});
+document.querySelectorAll('.quick-item').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.goto;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + tab));
+    quickPanel.classList.remove('open');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
