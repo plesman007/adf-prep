@@ -269,6 +269,34 @@
   .check-item.checked label{ color:var(--paper); text-decoration: line-through; text-decoration-color: var(--green); opacity:0.75; }
   .checklist-count{ font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--gold-bright); float:right; }
 
+  .add-item-row{ display:flex; gap:8px; margin: 6px 0 14px; }
+  .add-item-row input{
+    flex:1; background:var(--panel-raised); border:1px solid var(--line); border-radius:var(--radius);
+    color:var(--paper); font-family:'IBM Plex Sans', sans-serif; font-size:14px; padding:9px 10px;
+  }
+  .add-item-row input:focus{ outline:none; border-color:var(--gold); }
+  .custom-del{ background:none; border:none; color:var(--red); cursor:pointer; font-size:14px; margin-left:auto; }
+
+  .toggle-row{ display:flex; align-items:center; gap:10px; cursor:pointer; font-size:14px; color:var(--paper); margin-top:10px; }
+  .toggle-row input[type="checkbox"]{ width:38px; height:22px; appearance:none; background:var(--line); border-radius:12px; position:relative; cursor:pointer; transition:background .15s; flex-shrink:0; }
+  .toggle-row input[type="checkbox"]::after{ content:""; position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:var(--panel); transition:transform .15s; }
+  .toggle-row input[type="checkbox"]:checked{ background:var(--gold); }
+  .toggle-row input[type="checkbox"]:checked::after{ transform:translateX(16px); }
+
+  .quiz-q{ font-size:15px; color:var(--paper); margin: 4px 0 12px; }
+  .quiz-progress{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--paper-dim); margin-bottom:10px; }
+  .quiz-option{
+    display:block; width:100%; text-align:left; background:var(--panel-raised); border:1px solid var(--line);
+    border-radius:var(--radius); color:var(--paper); font-family:'IBM Plex Sans', sans-serif; font-size:14px;
+    padding:11px 14px; margin-bottom:8px; cursor:pointer; transition:border-color .15s;
+  }
+  .quiz-option:hover{ border-color:var(--gold); }
+  .quiz-option.correct{ border-color:var(--green); background:rgba(63,122,80,0.1); }
+  .quiz-option.incorrect{ border-color:var(--red); background:rgba(179,73,47,0.1); }
+  .quiz-option:disabled{ cursor:default; }
+  .quiz-result{ font-size:14px; color:var(--paper); margin-top:14px; }
+  .quiz-score{ font-family:'IBM Plex Mono', monospace; color:var(--gold-bright); }
+
   textarea{
     width:100%; min-height:160px; background:var(--panel-raised); border:1px solid var(--line); border-radius: var(--radius);
     color:var(--paper); font-family:'IBM Plex Sans', sans-serif; font-size:14px; padding:12px; resize:vertical;
@@ -326,7 +354,9 @@
     <button class="tab-btn active" data-tab="overview">Pathway</button>
     <button class="tab-btn" data-tab="fitness">Fitness</button>
     <button class="tab-btn" data-tab="checklist">Checklist</button>
+    <button class="tab-btn" data-tab="quiz">Quiz</button>
     <button class="tab-btn" data-tab="notes">Study Notes</button>
+    <button class="tab-btn" data-tab="settings">Settings</button>
   </div>
 
   <!-- OVERVIEW -->
@@ -426,8 +456,22 @@
       <h2>Eligibility &amp; document checklist<span class="checklist-count" id="checkCount">0/0</span></h2>
       <p>Documents you'll likely need. Start gathering these early — clearances take the longest.</p>
       <div class="checklist-group" id="checklistGroup"></div>
+      <div class="checklist-group" id="customChecklistGroup"></div>
+      <div class="add-item-row">
+        <input type="text" id="customItemInput" placeholder="Add your own item (e.g. village clearance letter)">
+        <button class="ghost" id="addCustomItem">Add</button>
+      </div>
       <button class="ghost" id="resetChecklist">Reset checklist</button>
       <span class="save-flash" id="checkFlash">Saved</span>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="panel" id="panel-quiz">
+    <div class="card">
+      <h2>Practice quiz</h2>
+      <p>A handful of sample numeracy, verbal, and reasoning questions in the style of a typical aptitude test. Not official ADF material — just a warm-up.</p>
+      <div id="quizArea"></div>
     </div>
   </div>
 
@@ -439,6 +483,33 @@
       <textarea id="notesArea" placeholder="Start typing..."></textarea>
       <button class="primary" id="saveNotesBtn">Save notes</button>
       <span class="save-flash" id="notesFlash">Saved</span>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="panel" id="panel-settings">
+    <div class="card">
+      <h2>Backup your data</h2>
+      <p>Everything you enter lives only in this browser. Download a backup now and then so you don't lose it if you clear your browser or switch devices.</p>
+      <button class="primary" id="exportBtn">Download backup</button>
+      <button class="ghost" id="importBtn">Restore from backup</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none;">
+      <span class="save-flash" id="backupFlash">Saved</span>
+    </div>
+
+    <div class="card">
+      <h2>Share your progress</h2>
+      <p>Generate a simple image with your readiness score and key numbers — handy to send to a mentor or family member.</p>
+      <button class="primary" id="shareBtn">Generate share image</button>
+    </div>
+
+    <div class="card">
+      <h2>Reminders</h2>
+      <p>Turn this on and, whenever you open the app, it'll nudge you if you haven't logged a session or checked in today. This only works while you open the app yourself — it can't send notifications while it's fully closed, since that needs a background server this site doesn't have.</p>
+      <label class="toggle-row">
+        <input type="checkbox" id="reminderToggle">
+        <span>Remind me when I open the app</span>
+      </label>
     </div>
   </div>
 
@@ -471,7 +542,10 @@ let state = {
   profile: { name: "", targetDate: "", genderProfile: "male" },
   fitnessLogs: [],
   checklist: {},
-  notes: ""
+  customChecklist: [],
+  notes: "",
+  reminderEnabled: false,
+  lastVisit: ""
 };
 
 async function loadState(){
@@ -488,10 +562,23 @@ async function loadState(){
     if(c) state.checklist = JSON.parse(c);
   }catch(e){}
   try{
+    const cc = localStorage.getItem('adfprep_customChecklist');
+    if(cc) state.customChecklist = JSON.parse(cc);
+  }catch(e){}
+  try{
     const n = localStorage.getItem('adfprep_notes');
     if(n) state.notes = n;
   }catch(e){}
+  try{
+    const r = localStorage.getItem('adfprep_reminder');
+    if(r) state.reminderEnabled = r === 'true';
+  }catch(e){}
+  try{
+    const lv = localStorage.getItem('adfprep_lastVisit');
+    if(lv) state.lastVisit = lv;
+  }catch(e){}
   render();
+  checkReminder();
 }
 
 async function saveProfile(){
@@ -503,8 +590,14 @@ async function saveFitness(){
 async function saveChecklist(){
   try{ localStorage.setItem('adfprep_checklist', JSON.stringify(state.checklist)); }catch(e){}
 }
+async function saveCustomChecklist(){
+  try{ localStorage.setItem('adfprep_customChecklist', JSON.stringify(state.customChecklist)); }catch(e){}
+}
 async function saveNotes(){
   try{ localStorage.setItem('adfprep_notes', state.notes); }catch(e){}
+}
+async function saveReminder(){
+  try{ localStorage.setItem('adfprep_reminder', String(state.reminderEnabled)); }catch(e){}
 }
 
 function flash(id){
@@ -686,14 +779,22 @@ document.getElementById('logBtn').addEventListener('click', ()=>{
 });
 
 // ---------- Checklist ----------
+function totalChecklistCount(){
+  return CHECKLIST_ITEMS.length + state.customChecklist.length;
+}
+function totalCheckedCount(){
+  let count = 0;
+  CHECKLIST_ITEMS.forEach((item, idx) => { if(state.checklist['item_'+idx]) count++; });
+  state.customChecklist.forEach(ci => { if(state.checklist['custom_'+ci.id]) count++; });
+  return count;
+}
+
 function renderChecklist(){
   const group = document.getElementById('checklistGroup');
   group.innerHTML = "";
-  let checkedCount = 0;
   CHECKLIST_ITEMS.forEach((item, idx)=>{
     const key = 'item_'+idx;
     const checked = !!state.checklist[key];
-    if(checked) checkedCount++;
     const row = document.createElement('div');
     row.className = 'check-item' + (checked ? ' checked' : '');
     row.innerHTML = `<input type="checkbox" id="${key}" ${checked?'checked':''}><label for="${key}">${item}</label>`;
@@ -703,8 +804,41 @@ function renderChecklist(){
     });
     group.appendChild(row);
   });
-  document.getElementById('checkCount').textContent = checkedCount + "/" + CHECKLIST_ITEMS.length;
+
+  const customGroup = document.getElementById('customChecklistGroup');
+  customGroup.innerHTML = "";
+  state.customChecklist.forEach(ci=>{
+    const key = 'custom_'+ci.id;
+    const checked = !!state.checklist[key];
+    const row = document.createElement('div');
+    row.className = 'check-item' + (checked ? ' checked' : '');
+    row.innerHTML = `<input type="checkbox" id="${key}" ${checked?'checked':''}><label for="${key}" style="flex:1;">${ci.text}</label><button class="custom-del" data-id="${ci.id}">✕</button>`;
+    row.querySelector('input').addEventListener('change', (e)=>{
+      state.checklist[key] = e.target.checked;
+      saveChecklist(); renderChecklist(); renderReadiness(); flash('checkFlash');
+    });
+    row.querySelector('.custom-del').addEventListener('click', ()=>{
+      state.customChecklist = state.customChecklist.filter(x=>x.id !== ci.id);
+      delete state.checklist[key];
+      saveCustomChecklist(); saveChecklist(); renderChecklist(); renderReadiness();
+    });
+    customGroup.appendChild(row);
+  });
+
+  document.getElementById('checkCount').textContent = totalCheckedCount() + "/" + totalChecklistCount();
 }
+
+document.getElementById('addCustomItem').addEventListener('click', ()=>{
+  const input = document.getElementById('customItemInput');
+  const text = input.value.trim();
+  if(!text) return;
+  state.customChecklist.push({ id: Date.now(), text });
+  saveCustomChecklist(); renderChecklist(); renderReadiness();
+  input.value = '';
+});
+document.getElementById('customItemInput').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter') document.getElementById('addCustomItem').click();
+});
 
 document.getElementById('resetChecklist').addEventListener('click', ()=>{
   state.checklist = {};
@@ -729,8 +863,7 @@ function renderReadiness(){
     const bPct = Math.min(log.beep / t.beep, 1);
     fitnessScore = (pPct + sPct + bPct) / 3;
   }
-  const checkedCount = Object.values(state.checklist).filter(Boolean).length;
-  const checklistScore = checkedCount / CHECKLIST_ITEMS.length;
+  const checklistScore = totalCheckedCount() / totalChecklistCount();
 
   const overall = Math.round(((fitnessScore * 0.5) + (checklistScore * 0.5)) * 100);
   document.getElementById('readinessPct').textContent = overall + "%";
@@ -741,16 +874,216 @@ function renderReadiness(){
   else{ stamp.textContent = "Just getting started"; stamp.classList.remove('ready'); }
 }
 
+// ---------- Backup: export / import ----------
+document.getElementById('exportBtn').addEventListener('click', ()=>{
+  const backup = {
+    profile: state.profile,
+    fitnessLogs: state.fitnessLogs,
+    checklist: state.checklist,
+    customChecklist: state.customChecklist,
+    notes: state.notes,
+    exportedAt: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dateStr = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `adf-prep-backup-${dateStr}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  flash('backupFlash');
+});
+
+document.getElementById('importBtn').addEventListener('click', ()=>{
+  document.getElementById('importFile').click();
+});
+document.getElementById('importFile').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (evt)=>{
+    try{
+      const data = JSON.parse(evt.target.result);
+      if(data.profile) state.profile = data.profile;
+      if(data.fitnessLogs) state.fitnessLogs = data.fitnessLogs;
+      if(data.checklist) state.checklist = data.checklist;
+      if(data.customChecklist) state.customChecklist = data.customChecklist;
+      if(typeof data.notes === 'string') state.notes = data.notes;
+      saveProfile(); saveFitness(); saveChecklist(); saveCustomChecklist(); saveNotes();
+      render();
+      flash('backupFlash');
+    }catch(err){
+      alert("Couldn't read that file — make sure it's a backup exported from this app.");
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+// ---------- Share progress image ----------
+document.getElementById('shareBtn').addEventListener('click', async ()=>{
+  const canvas = document.createElement('canvas');
+  canvas.width = 800; canvas.height = 450;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#eef1e9'; ctx.fillRect(0,0,800,450);
+  ctx.strokeStyle = '#d9ded0'; ctx.lineWidth = 2; ctx.strokeRect(20,20,760,410);
+
+  ctx.fillStyle = '#96691f'; ctx.font = '600 14px monospace';
+  ctx.fillText('MY ADF PREP', 50, 65);
+
+  const name = state.profile.name ? state.profile.name : 'Applicant';
+  ctx.fillStyle = '#20241c'; ctx.font = '600 30px sans-serif';
+  ctx.fillText(name, 50, 105);
+
+  const overallEl = document.getElementById('readinessPct');
+  const overall = overallEl ? overallEl.textContent : '0%';
+  ctx.fillStyle = '#96691f'; ctx.font = '600 64px monospace';
+  ctx.fillText(overall, 50, 200);
+  ctx.fillStyle = '#5b6152'; ctx.font = '400 15px sans-serif';
+  ctx.fillText('overall readiness', 50, 225);
+
+  const n = state.fitnessLogs.length;
+  const latest = n ? state.fitnessLogs[0] : null;
+  const t = TARGETS[state.profile.genderProfile];
+  let y = 280;
+  ctx.font = '400 16px monospace'; ctx.fillStyle = '#20241c';
+  ctx.fillText(`Push-ups: ${latest ? latest.pushups : '—'} / target ${t.pushups}`, 50, y);
+  ctx.fillText(`Sit-ups: ${latest ? latest.situps : '—'} / target ${t.situps}`, 50, y + 32);
+  ctx.fillText(`Beep test: ${latest ? latest.beep : '—'} / target ${t.beep}`, 50, y + 64);
+  ctx.fillText(`Checklist: ${totalCheckedCount()}/${totalChecklistCount()} items done`, 50, y + 96);
+
+  ctx.fillStyle = '#5b6152'; ctx.font = '400 12px monospace';
+  ctx.fillText('Generated ' + new Date().toLocaleDateString(), 50, 425);
+
+  canvas.toBlob(async (blob)=>{
+    const file = new File([blob], 'adf-prep-progress.png', { type: 'image/png' });
+    if(navigator.share && navigator.canShare && navigator.canShare({ files: [file] })){
+      try{ await navigator.share({ files: [file], title: 'My ADF prep progress' }); }catch(e){}
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'adf-prep-progress.png';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  }, 'image/png');
+});
+
+// ---------- Reminders ----------
+document.getElementById('reminderToggle').addEventListener('change', async (e)=>{
+  if(e.target.checked){
+    if(!('Notification' in window)){
+      alert("This browser doesn't support notifications.");
+      e.target.checked = false; return;
+    }
+    const perm = await Notification.requestPermission();
+    if(perm !== 'granted'){
+      e.target.checked = false; return;
+    }
+  }
+  state.reminderEnabled = e.target.checked;
+  saveReminder();
+});
+
+function checkReminder(){
+  if(!state.reminderEnabled) return;
+  if(!('Notification' in window) || Notification.permission !== 'granted') return;
+  const today = new Date().toISOString().slice(0,10);
+  if(state.lastVisit === today) return;
+  const body = state.fitnessLogs.length && state.fitnessLogs[0].date === today
+    ? "You've already logged today — check your checklist next."
+    : "Haven't logged a session yet today. A quick set counts.";
+  setTimeout(()=>{
+    if('serviceWorker' in navigator && navigator.serviceWorker.getRegistration){
+      navigator.serviceWorker.getRegistration().then(reg=>{
+        if(reg) reg.showNotification('My ADF Prep', { body, icon: 'icon-192.png' });
+        else new Notification('My ADF Prep', { body });
+      }).catch(()=> new Notification('My ADF Prep', { body }));
+    } else {
+      new Notification('My ADF Prep', { body });
+    }
+  }, 1500);
+  state.lastVisit = today;
+  try{ localStorage.setItem('adfprep_lastVisit', today); }catch(err){}
+}
+
+// ---------- Practice quiz ----------
+const QUIZ_QUESTIONS = [
+  { q: "If a supply truck travels 60 km in 1.5 hours, what's its average speed?", options: ["30 km/h", "40 km/h", "45 km/h", "90 km/h"], correct: 1 },
+  { q: "Complete the pattern: 2, 4, 8, 16, __", options: ["20", "24", "32", "18"], correct: 2 },
+  { q: "Choose the word that means the opposite of 'concealed'.", options: ["Hidden", "Visible", "Quiet", "Distant"], correct: 1 },
+  { q: "A patrol has 24 members split into equal groups of 4. How many groups?", options: ["4", "6", "8", "12"], correct: 1 },
+  { q: "Which word does not belong: hammer, wrench, screwdriver, apple?", options: ["Hammer", "Wrench", "Screwdriver", "Apple"], correct: 3 },
+  { q: "'Cautious' most nearly means:", options: ["Careless", "Careful", "Curious", "Confident"], correct: 1 },
+  { q: "If today is Wednesday, what day will it be in 10 days?", options: ["Friday", "Saturday", "Sunday", "Monday"], correct: 1 },
+  { q: "Which shape completes the set: square, pentagon, hexagon, __?", options: ["Triangle", "Heptagon", "Circle", "Oval"], correct: 1 }
+];
+
+let quizState = { idx: 0, score: 0, answered: false };
+
+function initQuiz(){
+  quizState = { idx: 0, score: 0, answered: false };
+  renderQuiz();
+}
+
+function renderQuiz(){
+  const area = document.getElementById('quizArea');
+  if(quizState.idx >= QUIZ_QUESTIONS.length){
+    area.innerHTML = `
+      <p class="quiz-result">You scored <span class="quiz-score">${quizState.score} / ${QUIZ_QUESTIONS.length}</span>.</p>
+      <button class="primary" id="quizRetry">Try again</button>
+    `;
+    document.getElementById('quizRetry').addEventListener('click', initQuiz);
+    return;
+  }
+  const q = QUIZ_QUESTIONS[quizState.idx];
+  area.innerHTML = `
+    <div class="quiz-progress">Question ${quizState.idx + 1} of ${QUIZ_QUESTIONS.length} · Score ${quizState.score}</div>
+    <div class="quiz-q">${q.q}</div>
+    <div id="quizOptions"></div>
+  `;
+  const optsWrap = document.getElementById('quizOptions');
+  q.options.forEach((opt, i)=>{
+    const btn = document.createElement('button');
+    btn.className = 'quiz-option';
+    btn.textContent = opt;
+    btn.addEventListener('click', ()=>{
+      if(quizState.answered) return;
+      quizState.answered = true;
+      const buttons = optsWrap.querySelectorAll('.quiz-option');
+      buttons.forEach(b=>b.disabled = true);
+      if(i === q.correct){
+        btn.classList.add('correct');
+        quizState.score++;
+      } else {
+        btn.classList.add('incorrect');
+        buttons[q.correct].classList.add('correct');
+      }
+      setTimeout(()=>{
+        quizState.idx++;
+        quizState.answered = false;
+        renderQuiz();
+      }, 900);
+    });
+    optsWrap.appendChild(btn);
+  });
+}
+
 function render(){
   inputName.value = state.profile.name || "";
   inputProfile.value = state.profile.genderProfile || "male";
   inputDate.value = state.profile.targetDate || "";
   notesArea.value = state.notes || "";
+  document.getElementById('reminderToggle').checked = state.reminderEnabled;
   renderHeading();
   renderCountdown();
   renderFitness();
   renderChecklist();
   renderReadiness();
+  initQuiz();
 }
 
 loadState();
