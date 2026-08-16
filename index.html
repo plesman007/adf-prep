@@ -308,6 +308,14 @@
   .quiz-result{ font-size:14px; color:var(--paper); margin-top:14px; }
   .quiz-score{ font-family:'IBM Plex Mono', monospace; color:var(--gold-bright); }
 
+  .readiness-breakdown{ display:flex; gap:16px; flex-wrap:wrap; margin-top:10px; }
+  .readiness-breakdown .rb-item{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--paper-dim); display:flex; align-items:center; gap:5px; }
+  .readiness-breakdown .rb-dot{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+  .readiness-breakdown .rb-item strong{ color:var(--paper); font-weight:500; }
+  .priority-line{ font-size:12.5px; color:var(--paper-dim); margin-top:8px; }
+  .priority-line strong{ color:var(--gold-bright); }
+  .priority-line a.drill-link{ color:var(--gold-bright); text-decoration:underline; cursor:pointer; background:none; border:none; font:inherit; padding:0; }
+
   .apt-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
   .apt-timer{ font-family:'IBM Plex Mono', monospace; font-size:22px; color:var(--paper); font-weight:600; }
   .apt-timer.low{ color:var(--red); }
@@ -327,6 +335,14 @@
   .apt-result-row{ display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px dashed var(--line); font-size:14px; color:var(--paper-dim); }
   .apt-result-row strong{ color:var(--paper); }
   .apt-score-big{ font-family:'IBM Plex Mono', monospace; font-size:42px; color:var(--gold-bright); margin:2px 0 12px; }
+
+  .drill-btn-row{ display:flex; gap:8px; flex-wrap:wrap; margin: 4px 0 4px; }
+  .apt-history-block{ margin-top:22px; padding-top:18px; border-top:1px solid var(--line); }
+  .apt-history-block h4{ font-family:'Oswald', sans-serif; text-transform:uppercase; letter-spacing:0.03em; font-size:12.5px; color:var(--paper-dim); margin:0 0 10px; }
+  .apt-history-row{ display:flex; justify-content:space-between; font-size:12.5px; color:var(--paper-dim); padding:5px 0; border-bottom:1px dashed var(--line); font-family:'IBM Plex Mono', monospace; }
+  .apt-weak-suggest{ font-size:13px; color:var(--paper); margin-top:12px; }
+  .apt-weak-suggest strong{ color:var(--gold-bright); }
+  .apt-weak-suggest button{ margin-top:8px; }
 
   textarea{
     width:100%; min-height:160px; background:var(--panel-raised); border:1px solid var(--line); border-radius: var(--radius);
@@ -378,6 +394,8 @@
     <div class="readiness">
       <div class="readiness-top"><span>Your progress</span><span id="readinessPct">0%</span></div>
       <div class="bar"><div class="bar-fill" id="readinessBar"></div></div>
+      <div class="readiness-breakdown" id="readinessBreakdown"></div>
+      <div class="priority-line" id="priorityLine"></div>
     </div>
   </div>
 
@@ -528,7 +546,17 @@
     <div class="card" id="aptStartCard">
       <h2>Aptitude test practice</h2>
       <p>51 questions in 20 minutes — 17 verbal reasoning, 17 numerical reasoning, 17 abstract reasoning. That's about 23.5 seconds a question, so keep moving. There's no penalty for a wrong guess, but a blank answer counts as wrong, so never leave one empty. Questions are freshly generated each time — not official ADF material, just practice in the same format.</p>
-      <button class="primary" id="aptStartBtn">Start test</button>
+      <button class="primary" id="aptStartBtn">Start full test (51Q · 20 min)</button>
+
+      <h3 style="margin-top:22px;">Or a quick drill</h3>
+      <p style="font-size:13px; margin-top:0;">5 questions, no timer — good for a short warm-up on one area, including mental maths.</p>
+      <div class="drill-btn-row">
+        <button class="ghost" data-drill="Verbal">Verbal drill</button>
+        <button class="ghost" data-drill="Numerical">Mental maths drill</button>
+        <button class="ghost" data-drill="Abstract">Abstract drill</button>
+      </div>
+
+      <div id="aptHistoryBlock"></div>
     </div>
 
     <div class="card" id="aptTestCard" style="display:none;">
@@ -543,15 +571,28 @@
     <div class="card" id="aptResultsCard" style="display:none;">
       <h2 id="aptResultsHeading">Results</h2>
       <div id="aptResultsArea"></div>
-      <button class="primary" id="aptRetryBtn">Take another test</button>
+      <button class="primary" id="aptBackBtn">Back to menu</button>
     </div>
   </div>
 
   <!-- NOTES -->
   <div class="panel" id="panel-notes">
     <div class="card">
-      <h2>Study &amp; interview notes</h2>
-      <p>Use this space for aptitude-test practice notes, answers to "why do you want to join," referee details, or questions to ask your recruiter.</p>
+      <h2>Interview practice</h2>
+      <p>Common ADF-style interview questions. The STAR method helps structure an answer: <strong style="color:var(--paper);">S</strong>ituation, <strong style="color:var(--paper);">T</strong>ask, <strong style="color:var(--paper);">A</strong>ction, <strong style="color:var(--paper);">R</strong>esult.</p>
+      <div class="field" style="border-top:none; padding-top:0; max-width:100%; margin-bottom:14px;">
+        <label>Question</label>
+        <select id="interviewQSelect"></select>
+      </div>
+      <textarea id="interviewAnswerArea" placeholder="Draft your STAR answer here..." style="min-height:120px;"></textarea>
+      <button class="primary" id="saveInterviewBtn">Save answer</button>
+      <span class="save-flash" id="interviewFlash">Saved</span>
+      <p style="font-size:12px; color:var(--paper-dim); margin-top:10px;" id="interviewCount"></p>
+    </div>
+
+    <div class="card">
+      <h2>Other notes</h2>
+      <p>Anything else — referee details, questions to ask your recruiter, general reminders.</p>
       <textarea id="notesArea" placeholder="Start typing..."></textarea>
       <button class="primary" id="saveNotesBtn">Save notes</button>
       <span class="save-flash" id="notesFlash">Saved</span>
@@ -622,6 +663,7 @@ let state = {
   checklist: {},
   customChecklist: [],
   notes: "",
+  interviewAnswers: {},
   reminderEnabled: false,
   lastVisit: ""
 };
@@ -646,6 +688,10 @@ async function loadState(){
   try{
     const n = localStorage.getItem('adfprep_notes');
     if(n) state.notes = n;
+  }catch(e){}
+  try{
+    const ia = localStorage.getItem('adfprep_interviewAnswers');
+    if(ia) state.interviewAnswers = JSON.parse(ia);
   }catch(e){}
   try{
     const r = localStorage.getItem('adfprep_reminder');
@@ -673,6 +719,9 @@ async function saveCustomChecklist(){
 }
 async function saveNotes(){
   try{ localStorage.setItem('adfprep_notes', state.notes); }catch(e){}
+}
+async function saveInterviewAnswers(){
+  try{ localStorage.setItem('adfprep_interviewAnswers', JSON.stringify(state.interviewAnswers)); }catch(e){}
 }
 async function saveReminder(){
   try{ localStorage.setItem('adfprep_reminder', String(state.reminderEnabled)); }catch(e){}
@@ -930,6 +979,42 @@ document.getElementById('saveNotesBtn').addEventListener('click', ()=>{
   saveNotes(); flash('notesFlash');
 });
 
+// ---------- Interview practice ----------
+const INTERVIEW_QUESTIONS = [
+  "Why do you want to join the ADF?",
+  "Tell me about a time you worked as part of a team under pressure.",
+  "Describe a situation where you had to follow instructions you disagreed with.",
+  "Tell me about a time you showed leadership.",
+  "How do you handle criticism or being corrected?",
+  "Describe a time you had to adapt quickly to a change in plans.",
+  "What would you do if a teammate wasn't pulling their weight?",
+  "Tell me about a challenge you've overcome."
+];
+
+function initInterviewSelect(){
+  const select = document.getElementById('interviewQSelect');
+  select.innerHTML = INTERVIEW_QUESTIONS.map((q, i) => `<option value="${i}">${q}</option>`).join('');
+  select.addEventListener('change', loadInterviewAnswer);
+  loadInterviewAnswer();
+}
+function loadInterviewAnswer(){
+  const idx = document.getElementById('interviewQSelect').value;
+  document.getElementById('interviewAnswerArea').value = state.interviewAnswers[idx] || '';
+  updateInterviewCount();
+}
+function updateInterviewCount(){
+  const answered = Object.values(state.interviewAnswers).filter(a => a && a.trim().length > 0).length;
+  document.getElementById('interviewCount').textContent = `${answered} of ${INTERVIEW_QUESTIONS.length} questions answered`;
+}
+document.getElementById('saveInterviewBtn').addEventListener('click', ()=>{
+  const idx = document.getElementById('interviewQSelect').value;
+  state.interviewAnswers[idx] = document.getElementById('interviewAnswerArea').value;
+  saveInterviewAnswers();
+  updateInterviewCount();
+  flash('interviewFlash');
+});
+initInterviewSelect();
+
 // ---------- Readiness ----------
 function renderReadiness(){
   const t = TARGETS[state.profile.genderProfile];
@@ -943,13 +1028,44 @@ function renderReadiness(){
   }
   const checklistScore = totalCheckedCount() / totalChecklistCount();
 
-  const overall = Math.round(((fitnessScore * 0.5) + (checklistScore * 0.5)) * 100);
+  const hist = (typeof getTestHistory === 'function') ? getTestHistory() : [];
+  const aptitudeScore = hist.length ? hist[0].percent / 100 : 0;
+
+  const overall = Math.round(((fitnessScore + checklistScore + aptitudeScore) / 3) * 100);
   document.getElementById('readinessPct').textContent = overall + "%";
   document.getElementById('readinessBar').style.width = overall + "%";
 
   const stamp = document.getElementById('statusStamp');
   if(overall >= 80){ stamp.textContent = "Looking ready"; stamp.classList.add('ready'); }
   else{ stamp.textContent = "Just getting started"; stamp.classList.remove('ready'); }
+
+  const categories = [
+    { label: 'Fitness', pct: Math.round(fitnessScore * 100), color: 'var(--gold-bright)' },
+    { label: 'Aptitude', pct: Math.round(aptitudeScore * 100), color: 'var(--blue)' },
+    { label: 'Checklist', pct: Math.round(checklistScore * 100), color: 'var(--green)' }
+  ];
+  const breakdownEl = document.getElementById('readinessBreakdown');
+  if(breakdownEl){
+    breakdownEl.innerHTML = categories.map(c =>
+      `<span class="rb-item"><span class="rb-dot" style="background:${c.color}"></span>${c.label} <strong>${c.pct}%</strong></span>`
+    ).join('');
+  }
+
+  const priorityEl = document.getElementById('priorityLine');
+  if(priorityEl){
+    const weakestCat = categories.reduce((a, b) => (b.pct < a.pct ? b : a));
+    let suggestion = '';
+    if(weakestCat.label === 'Fitness'){
+      suggestion = log ? 'Log another training session' : 'Log your first fitness session';
+    } else if(weakestCat.label === 'Checklist'){
+      suggestion = 'Tick off a document on your checklist';
+    } else {
+      suggestion = hist.length
+        ? `Practice ${weakestSectionFrom(hist[0].bySection).section.toLowerCase()} reasoning`
+        : 'Take your first aptitude test';
+    }
+    priorityEl.innerHTML = `Priority: <strong>${weakestCat.label}</strong> — ${suggestion}.`;
+  }
 }
 
 // ---------- Backup: export / import ----------
@@ -960,6 +1076,8 @@ document.getElementById('exportBtn').addEventListener('click', ()=>{
     checklist: state.checklist,
     customChecklist: state.customChecklist,
     notes: state.notes,
+    interviewAnswers: state.interviewAnswers,
+    testHistory: getTestHistory(),
     exportedAt: new Date().toISOString()
   };
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
@@ -990,7 +1108,11 @@ document.getElementById('importFile').addEventListener('change', (e)=>{
       if(data.checklist) state.checklist = data.checklist;
       if(data.customChecklist) state.customChecklist = data.customChecklist;
       if(typeof data.notes === 'string') state.notes = data.notes;
-      saveProfile(); saveFitness(); saveChecklist(); saveCustomChecklist(); saveNotes();
+      if(data.interviewAnswers) state.interviewAnswers = data.interviewAnswers;
+      if(Array.isArray(data.testHistory)){
+        try{ localStorage.setItem(APT_HISTORY_KEY, JSON.stringify(data.testHistory.slice(0,10))); }catch(err){}
+      }
+      saveProfile(); saveFitness(); saveChecklist(); saveCustomChecklist(); saveNotes(); saveInterviewAnswers();
       render();
       flash('backupFlash');
     }catch(err){
@@ -1068,12 +1190,12 @@ document.getElementById('reminderToggle').addEventListener('change', async (e)=>
 
 // ---------- Clear all data ----------
 document.getElementById('clearDataBtn').addEventListener('click', ()=>{
-  const sure = confirm("This permanently deletes everything you've entered on this device — profile, fitness logs, checklist, notes, and reminder setting. This can't be undone. Continue?");
+  const sure = confirm("This permanently deletes everything you've entered on this device — profile, fitness logs, checklist, notes, interview answers, test history, and reminder setting. This can't be undone. Continue?");
   if(!sure) return;
 
   const keys = [
     'adfprep_profile', 'adfprep_fitnessLogs', 'adfprep_checklist', 'adfprep_customChecklist',
-    'adfprep_notes', 'adfprep_reminder', 'adfprep_lastVisit'
+    'adfprep_notes', 'adfprep_interviewAnswers', 'adfprep_reminder', 'adfprep_lastVisit', APT_HISTORY_KEY
   ];
   keys.forEach(k => { try{ localStorage.removeItem(k); }catch(e){} });
 
@@ -1082,6 +1204,7 @@ document.getElementById('clearDataBtn').addEventListener('click', ()=>{
   state.checklist = {};
   state.customChecklist = [];
   state.notes = "";
+  state.interviewAnswers = {};
   state.reminderEnabled = false;
   state.lastVisit = "";
 
@@ -1313,6 +1436,8 @@ function genAbstractQuestion(){
 // ---------- Aptitude test: engine ----------
 const APT_TOTAL_SECONDS = 20 * 60;
 const APT_PER_SECTION = 17;
+const APT_DRILL_SIZE = 5;
+const APT_HISTORY_KEY = 'adfprep_testHistory';
 let aptState = null;
 
 function generateAptTest(){
@@ -1322,6 +1447,29 @@ function generateAptTest(){
   return [...verbalQs, ...numericalQs, ...abstractQs];
 }
 
+const DRILL_GENERATORS = {
+  Verbal: () => pickVerbalQuestions(APT_DRILL_SIZE),
+  Numerical: () => Array.from({ length: APT_DRILL_SIZE }, genNumericalQuestion),
+  Abstract: () => Array.from({ length: APT_DRILL_SIZE }, genAbstractQuestion)
+};
+
+function getTestHistory(){
+  try{ return JSON.parse(localStorage.getItem(APT_HISTORY_KEY) || '[]'); }catch(e){ return []; }
+}
+function saveTestHistory(entry){
+  const hist = getTestHistory();
+  hist.unshift(entry);
+  try{ localStorage.setItem(APT_HISTORY_KEY, JSON.stringify(hist.slice(0, 10))); }catch(e){}
+}
+function weakestSectionFrom(bySection){
+  let weakest = null, weakestPct = 101;
+  Object.keys(bySection).forEach(sec => {
+    const pct = bySection[sec].total ? (bySection[sec].correct / bySection[sec].total) * 100 : 100;
+    if(pct < weakestPct){ weakestPct = pct; weakest = sec; }
+  });
+  return { section: weakest, pct: Math.round(weakestPct) };
+}
+
 function startAptTest(){
   aptState = {
     questions: generateAptTest(),
@@ -1329,13 +1477,34 @@ function startAptTest(){
     answers: new Array(APT_PER_SECTION * 3).fill(null),
     timeLeft: APT_TOTAL_SECONDS,
     timerId: null,
-    answered: false
+    answered: false,
+    isDrill: false,
+    drillSection: null
   };
   document.getElementById('aptStartCard').style.display = 'none';
   document.getElementById('aptResultsCard').style.display = 'none';
   document.getElementById('aptTestCard').style.display = 'block';
+  document.getElementById('aptTimer').style.display = 'inline';
   aptState.timerId = setInterval(aptTick, 1000);
   updateAptTimer();
+  renderAptQuestion();
+}
+
+function startDrill(section){
+  aptState = {
+    questions: DRILL_GENERATORS[section](),
+    idx: 0,
+    answers: new Array(APT_DRILL_SIZE).fill(null),
+    timeLeft: null,
+    timerId: null,
+    answered: false,
+    isDrill: true,
+    drillSection: section
+  };
+  document.getElementById('aptStartCard').style.display = 'none';
+  document.getElementById('aptResultsCard').style.display = 'none';
+  document.getElementById('aptTestCard').style.display = 'block';
+  document.getElementById('aptTimer').style.display = 'none';
   renderAptQuestion();
 }
 
@@ -1348,6 +1517,7 @@ function aptTick(){
 }
 
 function updateAptTimer(){
+  if(aptState.timeLeft === null) return;
   const m = Math.floor(Math.max(0, aptState.timeLeft) / 60);
   const s = Math.max(0, aptState.timeLeft) % 60;
   const el = document.getElementById('aptTimer');
@@ -1358,7 +1528,9 @@ function updateAptTimer(){
 function renderAptQuestion(){
   const q = aptState.questions[aptState.idx];
   const total = aptState.questions.length;
-  document.getElementById('aptProgress').textContent = `Question ${aptState.idx + 1} of ${total}`;
+  document.getElementById('aptProgress').textContent = aptState.isDrill
+    ? `${aptState.drillSection} drill · question ${aptState.idx + 1} of ${total}`
+    : `Question ${aptState.idx + 1} of ${total}`;
   document.getElementById('aptProgressBar').style.width = Math.round((aptState.idx / total) * 100) + '%';
 
   const area = document.getElementById('aptQuestionArea');
@@ -1425,7 +1597,21 @@ function selectAptAnswer(i, wrap, selector){
 
 function finishAptTest(){
   if(aptState.timerId){ clearInterval(aptState.timerId); aptState.timerId = null; }
-  const timedOut = aptState.timeLeft <= 0;
+  const timedOut = aptState.timeLeft !== null && aptState.timeLeft <= 0;
+
+  document.getElementById('aptTestCard').style.display = 'none';
+  document.getElementById('aptResultsCard').style.display = 'block';
+
+  if(aptState.isDrill){
+    let correct = 0;
+    aptState.questions.forEach((q, i) => { if(aptState.answers[i] === q.correct) correct++; });
+    document.getElementById('aptResultsHeading').textContent = `${aptState.drillSection} drill results`;
+    document.getElementById('aptResultsArea').innerHTML = `
+      <div class="apt-score-big">${correct} / ${aptState.questions.length}</div>
+      <p style="font-size:13px; color:var(--paper-dim);">Quick drill — no timer, so take it as pure accuracy practice.</p>
+    `;
+    return;
+  }
 
   const bySection = { Verbal: { correct: 0, total: 0 }, Numerical: { correct: 0, total: 0 }, Abstract: { correct: 0, total: 0 } };
   let totalCorrect = 0;
@@ -1436,25 +1622,60 @@ function finishAptTest(){
       totalCorrect++;
     }
   });
-
-  document.getElementById('aptTestCard').style.display = 'none';
-  document.getElementById('aptResultsCard').style.display = 'block';
-  document.getElementById('aptResultsHeading').textContent = timedOut ? "Time's up" : 'Results';
-
   const total = aptState.questions.length;
+  const percent = Math.round((totalCorrect / total) * 100);
+
+  saveTestHistory({ date: new Date().toISOString().slice(0, 10), percent, bySection });
+
+  document.getElementById('aptResultsHeading').textContent = timedOut ? "Time's up" : 'Results';
   const rows = Object.keys(bySection).map(sec =>
     `<div class="apt-result-row"><span>${sec} reasoning</span><strong>${bySection[sec].correct} / ${bySection[sec].total}</strong></div>`
   ).join('');
+  const weak = weakestSectionFrom(bySection);
 
   document.getElementById('aptResultsArea').innerHTML = `
     <div class="apt-score-big">${totalCorrect} / ${total}</div>
     ${rows}
     <p style="font-size:12.5px; color:var(--paper-dim); margin-top:12px;">${timedOut ? 'The clock ran out — anything left blank counts as wrong, just like the real thing.' : "Finished with time to spare."}</p>
+    <div class="apt-weak-suggest">
+      Weakest this time: <strong>${weak.section} reasoning (${weak.pct}%)</strong>.
+      <br><button class="ghost" id="aptPracticeWeak" data-drill="${weak.section}">Practice ${weak.section.toLowerCase()} now</button>
+    </div>
   `;
+  document.getElementById('aptPracticeWeak').addEventListener('click', () => startDrill(weak.section));
+
+  renderReadiness();
+}
+
+function renderAptHistorySummary(){
+  const block = document.getElementById('aptHistoryBlock');
+  if(!block) return;
+  const hist = getTestHistory();
+  if(!hist.length){
+    block.innerHTML = `<div class="apt-history-block"><h4>Your history</h4><p style="font-size:12.5px; color:var(--paper-dim);">Take your first full test to start tracking your score over time.</p></div>`;
+    return;
+  }
+  const rows = hist.slice(0, 5).map(h => `<div class="apt-history-row"><span>${h.date}</span><span>${h.percent}%</span></div>`).join('');
+  const weak = weakestSectionFrom(hist[0].bySection);
+  block.innerHTML = `
+    <div class="apt-history-block">
+      <h4>Your history</h4>
+      ${rows}
+      <p class="apt-weak-suggest" style="margin-top:10px;">Last time's weak spot: <strong>${weak.section} reasoning</strong> — <button class="ghost" id="aptHistDrillBtn" data-drill="${weak.section}" style="padding:4px 10px; font-size:11px;">practice it</button></p>
+    </div>
+  `;
+  document.getElementById('aptHistDrillBtn').addEventListener('click', () => startDrill(weak.section));
 }
 
 document.getElementById('aptStartBtn').addEventListener('click', startAptTest);
-document.getElementById('aptRetryBtn').addEventListener('click', startAptTest);
+document.getElementById('aptBackBtn').addEventListener('click', () => {
+  document.getElementById('aptResultsCard').style.display = 'none';
+  document.getElementById('aptStartCard').style.display = 'block';
+  renderAptHistorySummary();
+});
+document.querySelectorAll('.drill-btn-row [data-drill]').forEach(btn => {
+  btn.addEventListener('click', () => startDrill(btn.dataset.drill));
+});
 
 function render(){
   inputName.value = state.profile.name || "";
@@ -1467,6 +1688,8 @@ function render(){
   renderFitness();
   renderChecklist();
   renderReadiness();
+  renderAptHistorySummary();
+  loadInterviewAnswer();
 }
 
 loadState();
