@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Service Ledger — ADF Enlistment Prep for PNG Applicants</title>
+<meta name="description" content="A personal prep tracker for Papua New Guinea nationals preparing for Australian Defence Force enlistment: pathway status, fitness targets, document checklist, and study notes.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1c2019;
+    --panel:#242a20;
+    --panel-raised:#2c3225;
+    --line:#454b3c;
+    --paper:#ede8da;
+    --paper-dim:#c9c3ae;
+    --gold:#c99a3e;
+    --gold-bright:#e0b559;
+    --red:#9a4436;
+    --green:#5c8a54;
+    --shadow: 0 10px 30px rgba(0,0,0,0.35);
+    --radius: 3px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse at 20% -10%, rgba(201,154,62,0.08), transparent 45%),
+      var(--bg);
+    color:var(--paper);
+    font-family:'IBM Plex Sans', sans-serif;
+    min-height:100vh;
+    padding: 28px 16px 60px;
+  }
+  .wrap{max-width: 920px; margin: 0 auto;}
+
+  /* ---------- Header / ID ledger card ---------- */
+  .ledger{
+    position:relative;
+    background: linear-gradient(180deg, var(--panel-raised), var(--panel));
+    border:1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    box-shadow: var(--shadow);
+    overflow:hidden;
+    margin-bottom: 22px;
+  }
+  .ledger::before{
+    content:"";
+    position:absolute; inset:0;
+    background-image: repeating-linear-gradient(90deg, transparent, transparent 7px, rgba(0,0,0,0.12) 7px, rgba(0,0,0,0.12) 8px);
+    opacity:0.15;
+    pointer-events:none;
+  }
+  .ledger-top{
+    display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px; letter-spacing:0.18em; text-transform:uppercase;
+    color: var(--gold-bright); opacity:0.85;
+  }
+  h1{
+    font-family:'Oswald', sans-serif;
+    font-weight:600; text-transform:uppercase; letter-spacing:0.03em;
+    font-size: 30px; margin: 4px 0 2px;
+    color: var(--paper);
+  }
+  .subtitle{ color: var(--paper-dim); font-size:13.5px; max-width: 60ch;}
+
+  .stamp{
+    font-family:'Oswald', sans-serif;
+    font-weight:700; letter-spacing:0.08em; text-transform:uppercase;
+    font-size:13px;
+    border: 2px solid var(--gold);
+    color: var(--gold-bright);
+    padding: 7px 14px;
+    border-radius: 2px;
+    transform: rotate(-3deg);
+    white-space:nowrap;
+    background: rgba(201,154,62,0.06);
+  }
+  .stamp.ready{ border-color: var(--green); color:#8fc384; background: rgba(92,138,84,0.08);}
+
+  .ledger-grid{
+    display:grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr));
+    gap: 14px; margin-top: 20px; position:relative;
+  }
+  .field{
+    border-top:1px solid var(--line); padding-top: 8px;
+  }
+  .field label{
+    display:block; font-family:'IBM Plex Mono', monospace; font-size:10px;
+    letter-spacing:0.12em; text-transform:uppercase; color: var(--paper-dim); margin-bottom:4px;
+  }
+  .field input, .field select{
+    width:100%; background:transparent; border:none; border-bottom:1px solid var(--line);
+    color:var(--paper); font-family:'IBM Plex Mono', monospace; font-size:15px; padding:3px 0;
+  }
+  .field input:focus, .field select:focus{ outline:none; border-bottom-color: var(--gold);}
+  .field select option{ background: var(--panel); color:var(--paper);}
+
+  .readiness{
+    margin-top:18px; position:relative;
+  }
+  .readiness-top{ display:flex; justify-content:space-between; font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--paper-dim); margin-bottom:6px;}
+  .bar{ height:10px; background:rgba(0,0,0,0.35); border-radius:6px; overflow:hidden; border:1px solid var(--line);}
+  .bar-fill{ height:100%; background: linear-gradient(90deg, var(--red), var(--gold), var(--green)); width:0%; transition:width .4s ease;}
+
+  /* ---------- Tabs ---------- */
+  .tabs{ display:flex; gap:4px; margin-bottom:18px; flex-wrap:wrap; border-bottom:1px solid var(--line); }
+  .tab-btn{
+    font-family:'Oswald', sans-serif; text-transform:uppercase; letter-spacing:0.04em; font-weight:500;
+    font-size:13px; color:var(--paper-dim); background:transparent; border:none; cursor:pointer;
+    padding:10px 14px; border-bottom:2px solid transparent; transition: color .15s, border-color .15s;
+  }
+  .tab-btn:hover{ color:var(--paper); }
+  .tab-btn.active{ color:var(--gold-bright); border-bottom-color: var(--gold); }
+
+  .panel{ display:none; animation: fade .25s ease; }
+  .panel.active{ display:block; }
+  @keyframes fade{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }
+
+  .card{
+    background:var(--panel); border:1px solid var(--line); border-radius: var(--radius);
+    padding: 20px 22px; margin-bottom:16px;
+  }
+  .card h2{
+    font-family:'Oswald', sans-serif; font-weight:600; text-transform:uppercase; letter-spacing:0.03em;
+    font-size:17px; margin:0 0 6px; color:var(--gold-bright);
+  }
+  .card h3{
+    font-family:'Oswald', sans-serif; font-weight:500; text-transform:uppercase; letter-spacing:0.03em;
+    font-size:14px; margin: 18px 0 8px; color: var(--paper);
+  }
+  .card p{ color:var(--paper-dim); font-size:14px; line-height:1.6; margin:6px 0;}
+  .note-box{
+    border-left:3px solid var(--gold); background:rgba(201,154,62,0.06);
+    padding:10px 14px; font-size:13px; color:var(--paper-dim); margin:14px 0; border-radius:0 3px 3px 0;
+  }
+
+  .stage-list{ list-style:none; margin:0; padding:0; counter-reset: stage; }
+  .stage-list li{
+    counter-increment: stage; position:relative; padding:10px 0 10px 40px; border-bottom:1px dashed var(--line);
+    font-size:14px; color:var(--paper-dim);
+  }
+  .stage-list li:last-child{ border-bottom:none; }
+  .stage-list li::before{
+    content: counter(stage, decimal-leading-zero);
+    position:absolute; left:0; top:9px; font-family:'IBM Plex Mono', monospace; color:var(--gold); font-size:13px;
+  }
+  .stage-list li strong{ color:var(--paper); display:block; font-size:14.5px; margin-bottom:2px; font-family:'IBM Plex Sans'; }
+
+  /* fitness */
+  .grid3{ display:grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap:12px; }
+  .stat{
+    border:1px solid var(--line); border-radius: var(--radius); padding:12px 14px; background:var(--panel-raised);
+  }
+  .stat label{ display:block; font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--paper-dim); margin-bottom:6px;}
+  .stat .row{ display:flex; align-items:baseline; justify-content:space-between; gap:8px;}
+  .stat input{
+    width:70px; background:transparent; border:none; border-bottom:1px solid var(--line); color:var(--paper);
+    font-family:'IBM Plex Mono', monospace; font-size:20px; padding:2px 0;
+  }
+  .stat input:focus{ outline:none; border-bottom-color:var(--gold); }
+  .stat .target{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--paper-dim); }
+  .stat .target.met{ color: var(--green); }
+
+  button.primary{
+    font-family:'Oswald', sans-serif; text-transform:uppercase; letter-spacing:0.05em; font-weight:600;
+    font-size:13px; background: var(--gold); color:#1c2019; border:none; padding:10px 18px; border-radius:2px;
+    cursor:pointer; margin-top:14px; transition: background .15s;
+  }
+  button.primary:hover{ background: var(--gold-bright); }
+  button.ghost{
+    font-family:'IBM Plex Mono', monospace; font-size:12px; background:transparent; color:var(--paper-dim);
+    border:1px solid var(--line); padding:8px 12px; border-radius:2px; cursor:pointer; margin-top:14px;
+  }
+  button.ghost:hover{ color:var(--paper); border-color:var(--gold); }
+
+  table.log{ width:100%; border-collapse:collapse; margin-top:16px; font-size:13px; }
+  table.log th, table.log td{ text-align:left; padding:7px 8px; border-bottom:1px solid var(--line); color:var(--paper-dim); }
+  table.log th{ font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:var(--paper-dim); }
+  table.log td:first-child{ color:var(--paper); font-family:'IBM Plex Mono', monospace; }
+  .del-btn{ background:none; border:none; color:var(--red); cursor:pointer; font-size:14px; }
+
+  /* checklist */
+  .checklist-group{ margin-bottom: 18px; }
+  .check-item{
+    display:flex; align-items:flex-start; gap:10px; padding:8px 0; border-bottom:1px dashed var(--line);
+  }
+  .check-item input[type=checkbox]{
+    width:18px; height:18px; margin-top:2px; accent-color: var(--gold); flex-shrink:0; cursor:pointer;
+  }
+  .check-item label{ font-size:14px; color:var(--paper-dim); cursor:pointer; line-height:1.4;}
+  .check-item.checked label{ color:var(--paper); text-decoration: line-through; text-decoration-color: var(--green); opacity:0.75; }
+  .checklist-count{ font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--gold-bright); float:right; }
+
+  textarea{
+    width:100%; min-height:160px; background:var(--panel-raised); border:1px solid var(--line); border-radius: var(--radius);
+    color:var(--paper); font-family:'IBM Plex Sans', sans-serif; font-size:14px; padding:12px; resize:vertical;
+  }
+  textarea:focus{ outline:none; border-color: var(--gold); }
+
+  .save-flash{ font-family:'IBM Plex Mono', monospace; font-size:11px; color: var(--green); opacity:0; transition: opacity .3s; margin-left:10px; }
+  .save-flash.show{ opacity:1; }
+
+  footer{ text-align:center; color:var(--paper-dim); font-size:11.5px; margin-top: 28px; font-family:'IBM Plex Mono', monospace; opacity:0.6; }
+
+  @media (max-width:520px){
+    h1{font-size:24px;}
+    .ledger-top{flex-direction:column;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="ledger">
+    <div class="ledger-top">
+      <div>
+        <div class="eyebrow">Service Ledger · ADF Enlistment Pathway</div>
+        <h1 id="nameHeading">Applicant Record</h1>
+        <div class="subtitle">Personal preparation tracker for the PNG&nbsp;→&nbsp;ADF enlistment pathway under the PNG–Australia defence treaty. Kept on this device only.</div>
+      </div>
+      <div class="stamp" id="statusStamp">Recruit Prep</div>
+    </div>
+
+    <div class="ledger-grid">
+      <div class="field">
+        <label>Name</label>
+        <input type="text" id="inputName" placeholder="Your name">
+      </div>
+      <div class="field">
+        <label>Fitness target profile</label>
+        <select id="inputProfile">
+          <option value="male">General entry — Male</option>
+          <option value="female">General entry — Female</option>
+          <option value="sf">Special Forces / high-perf</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Target date (test / interview / self-set)</label>
+        <input type="date" id="inputDate">
+      </div>
+      <div class="field">
+        <label>Days remaining</label>
+        <input type="text" id="daysRemaining" readonly value="—">
+      </div>
+    </div>
+
+    <div class="readiness">
+      <div class="readiness-top"><span>Overall readiness</span><span id="readinessPct">0%</span></div>
+      <div class="bar"><div class="bar-fill" id="readinessBar"></div></div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="overview">Pathway</button>
+    <button class="tab-btn" data-tab="fitness">Fitness</button>
+    <button class="tab-btn" data-tab="checklist">Checklist</button>
+    <button class="tab-btn" data-tab="notes">Study Notes</button>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div class="panel active" id="panel-overview">
+    <div class="card">
+      <h2>Where the pathway stands</h2>
+      <p>Under the PNG–Australia Mutual Defence Treaty (the "Pukpuk Treaty"), signed in late 2025, Australia and PNG agreed to build a recruitment pathway allowing PNG citizens to enlist in the Australian Defence Force. From 1 January 2026, the first phase opened applications only to PNG citizens who already hold Australian permanent residency. A bilateral taskforce is still finalising the broader pathway that would let PNG-based citizens apply directly — PNG's government has said this will not be automatic entry, and applicants will need to meet the same standards as any other ADF candidate.</p>
+      <div class="note-box">This is a genuinely new and still-moving process. Treat every date and detail here as a planning guide, not an official announcement — confirm current status with ADF Careers, the PNG Department of Defence, or PNG media before you act on it.</div>
+    </div>
+
+    <div class="card">
+      <h2>Typical ADF selection stages</h2>
+      <ol class="stage-list">
+        <li><strong>Application &amp; eligibility check</strong>Citizenship/residency status, age, education level, and character requirements are reviewed first.</li>
+        <li><strong>Aptitude test</strong>Assesses numeracy, literacy, reasoning, and mechanical comprehension to help match you to suitable roles.</li>
+        <li><strong>Medical assessment</strong>Full health history, vision, hearing, dental, and mental health screening against role-specific medical standards.</li>
+        <li><strong>Physical Fitness Assessment (PFA)</strong>Push-ups, sit-ups, and a beep test / shuttle run, scored against age- and gender-specific minimums.</li>
+        <li><strong>Interview</strong>Motivation, values, and role suitability discussion with recruiting staff.</li>
+        <li><strong>Background &amp; security checks</strong>Police checks and reference checks in both PNG and Australia are likely for this pathway.</li>
+        <li><strong>Offer &amp; enlistment</strong>Role and initial training location are confirmed on a successful outcome.</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h2>Where to watch for updates</h2>
+      <p>Keep an eye on: the PNG Department of Defence and Prime Minister's office announcements, the Australian Department of Defence's ministerial statements, ADF Careers' official site, and reputable PNG news outlets. Avoid third-party sites that claim to have an "application form" for this pathway — as of mid-2026 there is no direct in-country application process confirmed yet.</p>
+    </div>
+  </div>
+
+  <!-- FITNESS -->
+  <div class="panel" id="panel-fitness">
+    <div class="card">
+      <h2>Physical Fitness Assessment targets</h2>
+      <p>Reference minimums reported for ADF general entry (confirm exact figures for your role and this pathway with your recruiter closer to your test date). Switch your target profile in the ledger above.</p>
+      <div class="grid3" id="targetSummary"></div>
+
+      <h3>Log a session</h3>
+      <div class="grid3">
+        <div class="stat">
+          <label>Push-ups</label>
+          <div class="row"><input type="number" id="fPushups" min="0" placeholder="0"></div>
+          <div class="target" id="tPushups"></div>
+        </div>
+        <div class="stat">
+          <label>Sit-ups (1 min)</label>
+          <div class="row"><input type="number" id="fSitups" min="0" placeholder="0"></div>
+          <div class="target" id="tSitups"></div>
+        </div>
+        <div class="stat">
+          <label>Beep test level</label>
+          <div class="row"><input type="number" step="0.1" id="fBeep" min="0" placeholder="0.0"></div>
+          <div class="target" id="tBeep"></div>
+        </div>
+        <div class="stat">
+          <label>2.4km run (mm:ss)</label>
+          <div class="row"><input type="text" id="fRun" placeholder="11:00"></div>
+          <div class="target">Aim: sub 11:00</div>
+        </div>
+      </div>
+      <button class="primary" id="logBtn">Save today's session</button>
+      <span class="save-flash" id="fitFlash">Saved</span>
+
+      <h3>Session history</h3>
+      <table class="log" id="logTable">
+        <thead><tr><th>Date</th><th>Push-ups</th><th>Sit-ups</th><th>Beep</th><th>Run</th><th></th></tr></thead>
+        <tbody id="logBody"></tbody>
+      </table>
+      <p id="logEmpty" style="display:none;">No sessions logged yet — your first entry starts the trend line.</p>
+    </div>
+  </div>
+
+  <!-- CHECKLIST -->
+  <div class="panel" id="panel-checklist">
+    <div class="card">
+      <h2>Eligibility &amp; document checklist<span class="checklist-count" id="checkCount">0/0</span></h2>
+      <p>Typical documents requested for ADF-style enlistment. Gather these early — clearance and certificate requests often take the longest.</p>
+      <div class="checklist-group" id="checklistGroup"></div>
+      <button class="ghost" id="resetChecklist">Reset checklist</button>
+      <span class="save-flash" id="checkFlash">Saved</span>
+    </div>
+  </div>
+
+  <!-- NOTES -->
+  <div class="panel" id="panel-notes">
+    <div class="card">
+      <h2>Study &amp; interview notes</h2>
+      <p>Use this space for aptitude-test practice notes, answers to "why do you want to join," referee details, or questions to ask your recruiter.</p>
+      <textarea id="notesArea" placeholder="Start typing..."></textarea>
+      <button class="primary" id="saveNotesBtn">Save notes</button>
+      <span class="save-flash" id="notesFlash">Saved</span>
+    </div>
+  </div>
+
+  <footer>Stored privately on this device via this artifact's storage — not submitted anywhere. Always verify official requirements with ADF Recruiting / PNG Department of Defence.</footer>
+</div>
+
+<script>
+const CHECKLIST_ITEMS = [
+  "Valid PNG passport (or certified proof of citizenship)",
+  "Birth certificate",
+  "Police clearance certificate — PNG",
+  "Police clearance certificate — Australia (if you've lived there 12+ months)",
+  "Educational certificates / academic transcripts",
+  "Proof of English language proficiency (if requested)",
+  "Medical history summary, including immunisation records",
+  "Dental and vision records (recent check-up if available)",
+  "Two to three character referees with contact details",
+  "Passport-sized photographs",
+  "Proof of Australian permanent residency (if applying under the current phase)",
+  "Personal statement / notes on why you want to join"
+];
+
+const TARGETS = {
+  male: { pushups: 15, situps: 45, beep: 7.5, label: "General entry — Male" },
+  female: { pushups: 8, situps: 45, beep: 6.1, label: "General entry — Female" },
+  sf: { pushups: 30, situps: 60, beep: 10.1, label: "Special Forces / high performance" }
+};
+
+let state = {
+  profile: { name: "", targetDate: "", genderProfile: "male" },
+  fitnessLogs: [],
+  checklist: {},
+  notes: ""
+};
+
+async function loadState(){
+  try{
+    const p = localStorage.getItem('adfprep_profile');
+    if(p) state.profile = JSON.parse(p);
+  }catch(e){}
+  try{
+    const f = localStorage.getItem('adfprep_fitnessLogs');
+    if(f) state.fitnessLogs = JSON.parse(f);
+  }catch(e){}
+  try{
+    const c = localStorage.getItem('adfprep_checklist');
+    if(c) state.checklist = JSON.parse(c);
+  }catch(e){}
+  try{
+    const n = localStorage.getItem('adfprep_notes');
+    if(n) state.notes = n;
+  }catch(e){}
+  render();
+}
+
+async function saveProfile(){
+  try{ localStorage.setItem('adfprep_profile', JSON.stringify(state.profile)); }catch(e){}
+}
+async function saveFitness(){
+  try{ localStorage.setItem('adfprep_fitnessLogs', JSON.stringify(state.fitnessLogs)); }catch(e){}
+}
+async function saveChecklist(){
+  try{ localStorage.setItem('adfprep_checklist', JSON.stringify(state.checklist)); }catch(e){}
+}
+async function saveNotes(){
+  try{ localStorage.setItem('adfprep_notes', state.notes); }catch(e){}
+}
+
+function flash(id){
+  const el = document.getElementById(id);
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 1200);
+}
+
+// ---------- Tabs ----------
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ---------- Ledger ----------
+const inputName = document.getElementById('inputName');
+const inputProfile = document.getElementById('inputProfile');
+const inputDate = document.getElementById('inputDate');
+
+inputName.addEventListener('change', ()=>{
+  state.profile.name = inputName.value;
+  saveProfile(); renderHeading();
+});
+inputProfile.addEventListener('change', ()=>{
+  state.profile.genderProfile = inputProfile.value;
+  saveProfile(); renderFitness();
+});
+inputDate.addEventListener('change', ()=>{
+  state.profile.targetDate = inputDate.value;
+  saveProfile(); renderCountdown();
+});
+
+function renderHeading(){
+  document.getElementById('nameHeading').textContent = state.profile.name ? state.profile.name + " — Applicant Record" : "Applicant Record";
+}
+
+function renderCountdown(){
+  const el = document.getElementById('daysRemaining');
+  if(!state.profile.targetDate){ el.value = "—"; return; }
+  const target = new Date(state.profile.targetDate + "T00:00:00");
+  const today = new Date(); today.setHours(0,0,0,0);
+  const diff = Math.round((target - today) / 86400000);
+  el.value = diff >= 0 ? diff + " days" : Math.abs(diff) + " days ago";
+}
+
+// ---------- Fitness ----------
+function latestLog(){
+  return state.fitnessLogs.length ? state.fitnessLogs[0] : null;
+}
+
+function renderFitness(){
+  const t = TARGETS[state.profile.genderProfile];
+  const summary = document.getElementById('targetSummary');
+  summary.innerHTML = `
+    <div class="stat"><label>Profile</label><div style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--paper)">${t.label}</div></div>
+    <div class="stat"><label>Push-ups target</label><div style="font-size:20px;font-family:'IBM Plex Mono',monospace;color:var(--gold-bright)">${t.pushups}+</div></div>
+    <div class="stat"><label>Sit-ups target</label><div style="font-size:20px;font-family:'IBM Plex Mono',monospace;color:var(--gold-bright)">${t.situps}+</div></div>
+    <div class="stat"><label>Beep test target</label><div style="font-size:20px;font-family:'IBM Plex Mono',monospace;color:var(--gold-bright)">${t.beep}</div></div>
+  `;
+  document.getElementById('tPushups').textContent = "Target: " + t.pushups;
+  document.getElementById('tSitups').textContent = "Target: " + t.situps;
+  document.getElementById('tBeep').textContent = "Target: " + t.beep;
+
+  const body = document.getElementById('logBody');
+  body.innerHTML = "";
+  document.getElementById('logEmpty').style.display = state.fitnessLogs.length ? 'none' : 'block';
+  state.fitnessLogs.forEach((log, idx)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${log.date}</td><td>${log.pushups}</td><td>${log.situps}</td><td>${log.beep}</td><td>${log.run || '—'}</td>
+      <td><button class="del-btn" data-idx="${idx}">✕</button></td>`;
+    body.appendChild(tr);
+  });
+  body.querySelectorAll('.del-btn').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      state.fitnessLogs.splice(parseInt(b.dataset.idx),1);
+      saveFitness(); renderFitness(); renderReadiness();
+    });
+  });
+}
+
+document.getElementById('logBtn').addEventListener('click', ()=>{
+  const pushups = parseInt(document.getElementById('fPushups').value)||0;
+  const situps = parseInt(document.getElementById('fSitups').value)||0;
+  const beep = parseFloat(document.getElementById('fBeep').value)||0;
+  const run = document.getElementById('fRun').value.trim();
+  const entry = { date: new Date().toISOString().slice(0,10), pushups, situps, beep, run };
+  state.fitnessLogs.unshift(entry);
+  saveFitness();
+  renderFitness(); renderReadiness(); flash('fitFlash');
+  document.getElementById('fPushups').value='';
+  document.getElementById('fSitups').value='';
+  document.getElementById('fBeep').value='';
+  document.getElementById('fRun').value='';
+});
+
+// ---------- Checklist ----------
+function renderChecklist(){
+  const group = document.getElementById('checklistGroup');
+  group.innerHTML = "";
+  let checkedCount = 0;
+  CHECKLIST_ITEMS.forEach((item, idx)=>{
+    const key = 'item_'+idx;
+    const checked = !!state.checklist[key];
+    if(checked) checkedCount++;
+    const row = document.createElement('div');
+    row.className = 'check-item' + (checked ? ' checked' : '');
+    row.innerHTML = `<input type="checkbox" id="${key}" ${checked?'checked':''}><label for="${key}">${item}</label>`;
+    row.querySelector('input').addEventListener('change', (e)=>{
+      state.checklist[key] = e.target.checked;
+      saveChecklist(); renderChecklist(); renderReadiness(); flash('checkFlash');
+    });
+    group.appendChild(row);
+  });
+  document.getElementById('checkCount').textContent = checkedCount + "/" + CHECKLIST_ITEMS.length;
+}
+
+document.getElementById('resetChecklist').addEventListener('click', ()=>{
+  state.checklist = {};
+  saveChecklist(); renderChecklist(); renderReadiness();
+});
+
+// ---------- Notes ----------
+const notesArea = document.getElementById('notesArea');
+notesArea.addEventListener('input', ()=>{ state.notes = notesArea.value; });
+document.getElementById('saveNotesBtn').addEventListener('click', ()=>{
+  saveNotes(); flash('notesFlash');
+});
+
+// ---------- Readiness ----------
+function renderReadiness(){
+  const t = TARGETS[state.profile.genderProfile];
+  const log = latestLog();
+  let fitnessScore = 0;
+  if(log){
+    const pPct = Math.min(log.pushups / t.pushups, 1);
+    const sPct = Math.min(log.situps / t.situps, 1);
+    const bPct = Math.min(log.beep / t.beep, 1);
+    fitnessScore = (pPct + sPct + bPct) / 3;
+  }
+  const checkedCount = Object.values(state.checklist).filter(Boolean).length;
+  const checklistScore = checkedCount / CHECKLIST_ITEMS.length;
+
+  const overall = Math.round(((fitnessScore * 0.5) + (checklistScore * 0.5)) * 100);
+  document.getElementById('readinessPct').textContent = overall + "%";
+  document.getElementById('readinessBar').style.width = overall + "%";
+
+  const stamp = document.getElementById('statusStamp');
+  if(overall >= 80){ stamp.textContent = "Ready for Assessment"; stamp.classList.add('ready'); }
+  else{ stamp.textContent = "Recruit Prep"; stamp.classList.remove('ready'); }
+}
+
+function render(){
+  inputName.value = state.profile.name || "";
+  inputProfile.value = state.profile.genderProfile || "male";
+  inputDate.value = state.profile.targetDate || "";
+  notesArea.value = state.notes || "";
+  renderHeading();
+  renderCountdown();
+  renderFitness();
+  renderChecklist();
+  renderReadiness();
+}
+
+loadState();
+</script>
+</body>
+</html>
