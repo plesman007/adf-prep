@@ -5,10 +5,32 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Service Ledger — ADF Enlistment Prep for PNG Applicants</title>
 <meta name="description" content="A personal prep tracker for Papua New Guinea nationals preparing for Australian Defence Force enlistment: pathway status, fitness targets, document checklist, and study notes.">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#20241c">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ADF Prep">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
+    --bg:#eef1e9;
+    --panel:#ffffff;
+    --panel-raised:#f5f7f0;
+    --line:#d9ded0;
+    --paper:#20241c;
+    --paper-dim:#5b6152;
+    --gold:#b9862e;
+    --gold-bright:#96691f;
+    --red:#b3492f;
+    --green:#3f7a50;
+    --shadow: 0 10px 26px rgba(32,45,25,0.09);
+    --radius: 3px;
+    --overlay-rgb: 32,45,25;
+  }
+  :root[data-theme="dark"]{
     --bg:#1c2019;
     --panel:#242a20;
     --panel-raised:#2c3225;
@@ -20,18 +42,20 @@
     --red:#9a4436;
     --green:#5c8a54;
     --shadow: 0 10px 30px rgba(0,0,0,0.35);
-    --radius: 3px;
+    --overlay-rgb: 0,0,0;
   }
   *{box-sizing:border-box;}
+  html{ transition: background-color .2s ease; }
   html,body{margin:0;padding:0;}
   body{
     background:
-      radial-gradient(ellipse at 20% -10%, rgba(201,154,62,0.08), transparent 45%),
+      radial-gradient(ellipse at 20% -10%, rgba(63,122,80,0.07), transparent 45%),
       var(--bg);
     color:var(--paper);
     font-family:'IBM Plex Sans', sans-serif;
     min-height:100vh;
     padding: 28px 16px 60px;
+    transition: background-color .2s ease, color .2s ease;
   }
   .wrap{max-width: 920px; margin: 0 auto;}
 
@@ -49,8 +73,8 @@
   .ledger::before{
     content:"";
     position:absolute; inset:0;
-    background-image: repeating-linear-gradient(90deg, transparent, transparent 7px, rgba(0,0,0,0.12) 7px, rgba(0,0,0,0.12) 8px);
-    opacity:0.15;
+    background-image: repeating-linear-gradient(90deg, transparent, transparent 7px, rgba(var(--overlay-rgb),0.08) 7px, rgba(var(--overlay-rgb),0.08) 8px);
+    opacity:0.5;
     pointer-events:none;
   }
   .ledger-top{
@@ -79,9 +103,17 @@
     border-radius: 2px;
     transform: rotate(-3deg);
     white-space:nowrap;
-    background: rgba(201,154,62,0.06);
+    background: rgba(185,134,46,0.08);
   }
-  .stamp.ready{ border-color: var(--green); color:#8fc384; background: rgba(92,138,84,0.08);}
+  .stamp.ready{ border-color: var(--green); color:#2f6640; background: rgba(63,122,80,0.09);}
+
+  .theme-toggle{
+    width:38px; height:38px; border-radius:2px; border:1px solid var(--line);
+    background: var(--panel-raised); color: var(--paper); cursor:pointer;
+    display:flex; align-items:center; justify-content:center; font-size:16px;
+    flex-shrink:0; transition: border-color .15s, transform .15s;
+  }
+  .theme-toggle:hover{ border-color: var(--gold); transform: translateY(-1px); }
 
   .ledger-grid{
     display:grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr));
@@ -105,7 +137,7 @@
     margin-top:18px; position:relative;
   }
   .readiness-top{ display:flex; justify-content:space-between; font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--paper-dim); margin-bottom:6px;}
-  .bar{ height:10px; background:rgba(0,0,0,0.35); border-radius:6px; overflow:hidden; border:1px solid var(--line);}
+  .bar{ height:10px; background:rgba(var(--overlay-rgb),0.1); border-radius:6px; overflow:hidden; border:1px solid var(--line);}
   .bar-fill{ height:100%; background: linear-gradient(90deg, var(--red), var(--gold), var(--green)); width:0%; transition:width .4s ease;}
 
   /* ---------- Tabs ---------- */
@@ -136,9 +168,29 @@
   }
   .card p{ color:var(--paper-dim); font-size:14px; line-height:1.6; margin:6px 0;}
   .note-box{
-    border-left:3px solid var(--gold); background:rgba(201,154,62,0.06);
+    border-left:3px solid var(--gold); background:rgba(185,134,46,0.07);
     padding:10px 14px; font-size:13px; color:var(--paper-dim); margin:14px 0; border-radius:0 3px 3px 0;
   }
+  .fact-list{ margin:14px 0 0; padding-left:20px; }
+  .fact-list li{ color:var(--paper-dim); font-size:14px; line-height:1.6; margin-bottom:6px; }
+
+  .countdown-line{
+    margin-top:12px; font-family:'IBM Plex Mono', monospace; font-size:13px; color:var(--paper-dim);
+  }
+  .countdown-line strong{ color:var(--gold-bright); }
+
+  .details-card summary{
+    cursor:pointer; list-style:none; display:flex; align-items:center; justify-content:space-between;
+    padding: 2px 0;
+  }
+  .details-card summary::-webkit-details-marker{ display:none; }
+  .details-card summary::after{
+    content:"+"; font-family:'IBM Plex Mono', monospace; font-size:18px; color:var(--gold);
+    flex-shrink:0; margin-left:12px;
+  }
+  .details-card[open] summary::after{ content:"–"; }
+  .details-card[open] summary{ margin-bottom:14px; padding-bottom:14px; border-bottom:1px solid var(--line); }
+  .details-card .stage-list{ margin-top:0; }
 
   .stage-list{ list-style:none; margin:0; padding:0; counter-reset: stage; }
   .stage-list li{
@@ -220,38 +272,32 @@
   <div class="ledger">
     <div class="ledger-top">
       <div>
-        <div class="eyebrow">Service Ledger · ADF Enlistment Pathway</div>
-        <h1 id="nameHeading">Applicant Record</h1>
-        <div class="subtitle">Personal preparation tracker for the PNG&nbsp;→&nbsp;ADF enlistment pathway under the PNG–Australia defence treaty. Kept on this device only.</div>
+        <div class="eyebrow">My ADF Prep · PNG to Australia</div>
+        <h1 id="nameHeading">Welcome back</h1>
+        <div class="subtitle">Track your progress toward ADF enlistment — one tab at a time. Everything you enter stays on this device.</div>
       </div>
-      <div class="stamp" id="statusStamp">Recruit Prep</div>
+      <div style="display:flex; align-items:flex-start; gap:10px;">
+        <div class="stamp" id="statusStamp">Just getting started</div>
+        <button id="themeToggle" class="theme-toggle" title="Toggle dark / light mode" aria-label="Toggle dark and light mode">
+          <span id="themeIcon">☾</span>
+        </button>
+      </div>
     </div>
 
     <div class="ledger-grid">
       <div class="field">
-        <label>Name</label>
-        <input type="text" id="inputName" placeholder="Your name">
+        <label>Your name</label>
+        <input type="text" id="inputName" placeholder="Type your name">
       </div>
       <div class="field">
-        <label>Fitness target profile</label>
-        <select id="inputProfile">
-          <option value="male">General entry — Male</option>
-          <option value="female">General entry — Female</option>
-          <option value="sf">Special Forces / high-perf</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>Target date (test / interview / self-set)</label>
+        <label>Target date (optional)</label>
         <input type="date" id="inputDate">
       </div>
-      <div class="field">
-        <label>Days remaining</label>
-        <input type="text" id="daysRemaining" readonly value="—">
-      </div>
     </div>
+    <div class="countdown-line" id="countdownLine"></div>
 
     <div class="readiness">
-      <div class="readiness-top"><span>Overall readiness</span><span id="readinessPct">0%</span></div>
+      <div class="readiness-top"><span>Your progress</span><span id="readinessPct">0%</span></div>
       <div class="bar"><div class="bar-fill" id="readinessBar"></div></div>
     </div>
   </div>
@@ -266,38 +312,50 @@
   <!-- OVERVIEW -->
   <div class="panel active" id="panel-overview">
     <div class="card">
-      <h2>Where the pathway stands</h2>
-      <p>Under the PNG–Australia Mutual Defence Treaty (the "Pukpuk Treaty"), signed in late 2025, Australia and PNG agreed to build a recruitment pathway allowing PNG citizens to enlist in the Australian Defence Force. From 1 January 2026, the first phase opened applications only to PNG citizens who already hold Australian permanent residency. A bilateral taskforce is still finalising the broader pathway that would let PNG-based citizens apply directly — PNG's government has said this will not be automatic entry, and applicants will need to meet the same standards as any other ADF candidate.</p>
-      <div class="note-box">This is a genuinely new and still-moving process. Treat every date and detail here as a planning guide, not an official announcement — confirm current status with ADF Careers, the PNG Department of Defence, or PNG media before you act on it.</div>
+      <h2>Where things stand</h2>
+      <p>PNG and Australia signed a defence treaty in late 2025 that opens a path for PNG citizens to join the ADF. Right now, only PNG citizens who already hold Australian permanent residency can apply — that started 1 January 2026. A wider pathway for PNG-based citizens is still being worked out.</p>
+      <ul class="fact-list">
+        <li>It's a genuinely new process, so details are still changing.</li>
+        <li>It won't be automatic — you'll need to meet the same standards as any ADF applicant.</li>
+        <li>Confirm anything important with ADF Careers or the PNG Department of Defence before acting on it.</li>
+      </ul>
     </div>
 
-    <div class="card">
-      <h2>Typical ADF selection stages</h2>
+    <details class="card details-card">
+      <summary><h2 style="display:inline;">What the selection process usually looks like</h2></summary>
       <ol class="stage-list">
-        <li><strong>Application &amp; eligibility check</strong>Citizenship/residency status, age, education level, and character requirements are reviewed first.</li>
-        <li><strong>Aptitude test</strong>Assesses numeracy, literacy, reasoning, and mechanical comprehension to help match you to suitable roles.</li>
-        <li><strong>Medical assessment</strong>Full health history, vision, hearing, dental, and mental health screening against role-specific medical standards.</li>
-        <li><strong>Physical Fitness Assessment (PFA)</strong>Push-ups, sit-ups, and a beep test / shuttle run, scored against age- and gender-specific minimums.</li>
-        <li><strong>Interview</strong>Motivation, values, and role suitability discussion with recruiting staff.</li>
-        <li><strong>Background &amp; security checks</strong>Police checks and reference checks in both PNG and Australia are likely for this pathway.</li>
-        <li><strong>Offer &amp; enlistment</strong>Role and initial training location are confirmed on a successful outcome.</li>
+        <li><strong>Application &amp; eligibility check</strong>Citizenship/residency, age, education, and character are reviewed first.</li>
+        <li><strong>Aptitude test</strong>Numeracy, literacy, and reasoning — helps match you to a suitable role.</li>
+        <li><strong>Medical assessment</strong>Health history, vision, hearing, dental, and mental health screening.</li>
+        <li><strong>Fitness test</strong>Push-ups, sit-ups, and a beep test or shuttle run.</li>
+        <li><strong>Interview</strong>A conversation about your motivation and fit for the role.</li>
+        <li><strong>Background checks</strong>Police and reference checks, likely in both countries for this pathway.</li>
+        <li><strong>Offer &amp; enlistment</strong>Your role and training location are confirmed.</li>
       </ol>
-    </div>
+    </details>
 
-    <div class="card">
-      <h2>Where to watch for updates</h2>
-      <p>Keep an eye on: the PNG Department of Defence and Prime Minister's office announcements, the Australian Department of Defence's ministerial statements, ADF Careers' official site, and reputable PNG news outlets. Avoid third-party sites that claim to have an "application form" for this pathway — as of mid-2026 there is no direct in-country application process confirmed yet.</p>
-    </div>
+    <details class="card details-card">
+      <summary><h2 style="display:inline;">Where to check for updates</h2></summary>
+      <p>Keep an eye on the PNG Department of Defence, the Australian Department of Defence, and ADF Careers' official site. Be wary of any site claiming to have an application form for this pathway — as of mid-2026 there's no confirmed direct application process yet.</p>
+    </details>
   </div>
 
   <!-- FITNESS -->
   <div class="panel" id="panel-fitness">
     <div class="card">
-      <h2>Physical Fitness Assessment targets</h2>
-      <p>Reference minimums reported for ADF general entry (confirm exact figures for your role and this pathway with your recruiter closer to your test date). Switch your target profile in the ledger above.</p>
+      <h2>Fitness targets</h2>
+      <p>Reference minimums for ADF general entry. Pick the profile closest to you — confirm exact numbers with your recruiter closer to your test date.</p>
+      <div class="field" style="border-top:none; padding-top:0; max-width:260px; margin-bottom:14px;">
+        <label>Target profile</label>
+        <select id="inputProfile">
+          <option value="male">General entry — Male</option>
+          <option value="female">General entry — Female</option>
+          <option value="sf">Special Forces / high-perf</option>
+        </select>
+      </div>
       <div class="grid3" id="targetSummary"></div>
 
-      <h3>Log a session</h3>
+      <h3>Log today's session</h3>
       <div class="grid3">
         <div class="stat">
           <label>Push-ups</label>
@@ -323,12 +381,14 @@
       <button class="primary" id="logBtn">Save today's session</button>
       <span class="save-flash" id="fitFlash">Saved</span>
 
-      <h3>Session history</h3>
-      <table class="log" id="logTable">
-        <thead><tr><th>Date</th><th>Push-ups</th><th>Sit-ups</th><th>Beep</th><th>Run</th><th></th></tr></thead>
-        <tbody id="logBody"></tbody>
-      </table>
-      <p id="logEmpty" style="display:none;">No sessions logged yet — your first entry starts the trend line.</p>
+      <details class="details-card" style="margin-top:20px;">
+        <summary><h3 style="display:inline; margin:0;">Session history</h3></summary>
+        <table class="log" id="logTable">
+          <thead><tr><th>Date</th><th>Push-ups</th><th>Sit-ups</th><th>Beep</th><th>Run</th><th></th></tr></thead>
+          <tbody id="logBody"></tbody>
+        </table>
+        <p id="logEmpty" style="display:none;">No sessions logged yet — your first entry starts the trend line.</p>
+      </details>
     </div>
   </div>
 
@@ -336,7 +396,7 @@
   <div class="panel" id="panel-checklist">
     <div class="card">
       <h2>Eligibility &amp; document checklist<span class="checklist-count" id="checkCount">0/0</span></h2>
-      <p>Typical documents requested for ADF-style enlistment. Gather these early — clearance and certificate requests often take the longest.</p>
+      <p>Documents you'll likely need. Start gathering these early — clearances take the longest.</p>
       <div class="checklist-group" id="checklistGroup"></div>
       <button class="ghost" id="resetChecklist">Reset checklist</button>
       <span class="save-flash" id="checkFlash">Saved</span>
@@ -425,6 +485,26 @@ function flash(id){
   setTimeout(()=>el.classList.remove('show'), 1200);
 }
 
+// ---------- Theme ----------
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('themeIcon').textContent = theme === 'dark' ? '☀' : '☾';
+}
+function initTheme(){
+  let saved = null;
+  try{ saved = localStorage.getItem('adfprep_theme'); }catch(e){}
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const theme = saved || (prefersDark ? 'dark' : 'light');
+  applyTheme(theme);
+}
+document.getElementById('themeToggle').addEventListener('click', ()=>{
+  const current = document.documentElement.getAttribute('data-theme') || 'light';
+  const next = current === 'dark' ? 'light' : 'dark';
+  applyTheme(next);
+  try{ localStorage.setItem('adfprep_theme', next); }catch(e){}
+});
+initTheme();
+
 // ---------- Tabs ----------
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -454,16 +534,18 @@ inputDate.addEventListener('change', ()=>{
 });
 
 function renderHeading(){
-  document.getElementById('nameHeading').textContent = state.profile.name ? state.profile.name + " — Applicant Record" : "Applicant Record";
+  document.getElementById('nameHeading').textContent = state.profile.name ? "Welcome back, " + state.profile.name : "Welcome back";
 }
 
 function renderCountdown(){
-  const el = document.getElementById('daysRemaining');
-  if(!state.profile.targetDate){ el.value = "—"; return; }
+  const el = document.getElementById('countdownLine');
+  if(!state.profile.targetDate){ el.textContent = ""; return; }
   const target = new Date(state.profile.targetDate + "T00:00:00");
   const today = new Date(); today.setHours(0,0,0,0);
   const diff = Math.round((target - today) / 86400000);
-  el.value = diff >= 0 ? diff + " days" : Math.abs(diff) + " days ago";
+  if(diff > 0){ el.innerHTML = "<strong>" + diff + " days</strong> to go"; }
+  else if(diff === 0){ el.innerHTML = "<strong>Today's the day</strong>"; }
+  else{ el.innerHTML = "<strong>" + Math.abs(diff) + " days</strong> since your target date"; }
 }
 
 // ---------- Fitness ----------
@@ -568,8 +650,8 @@ function renderReadiness(){
   document.getElementById('readinessBar').style.width = overall + "%";
 
   const stamp = document.getElementById('statusStamp');
-  if(overall >= 80){ stamp.textContent = "Ready for Assessment"; stamp.classList.add('ready'); }
-  else{ stamp.textContent = "Recruit Prep"; stamp.classList.remove('ready'); }
+  if(overall >= 80){ stamp.textContent = "Looking ready"; stamp.classList.add('ready'); }
+  else{ stamp.textContent = "Just getting started"; stamp.classList.remove('ready'); }
 }
 
 function render(){
@@ -585,6 +667,13 @@ function render(){
 }
 
 loadState();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+  });
+}
+
 </script>
 </body>
 </html>
