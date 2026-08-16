@@ -195,6 +195,17 @@
   .details-card .stage-list{ margin-top:0; }
 
   .stage-list{ list-style:none; margin:0; padding:0; counter-reset: stage; }
+
+  .simple-steps{ list-style:none; margin:18px 0 0; padding:0; }
+  .simple-steps li{ display:flex; gap:14px; align-items:flex-start; padding:14px 0; border-bottom:1px solid var(--line); }
+  .simple-steps li:last-child{ border-bottom:none; }
+  .step-num{
+    flex-shrink:0; width:32px; height:32px; border-radius:50%; background:var(--panel-raised); border:1px solid var(--gold);
+    color:var(--gold-bright); font-family:'IBM Plex Mono', monospace; font-size:14px; font-weight:600;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .simple-steps strong{ display:block; font-size:15px; color:var(--paper); margin-bottom:3px; }
+  .simple-steps span{ display:block; font-size:13.5px; color:var(--paper-dim); line-height:1.5; }
   .stage-list li{
     counter-increment: stage; position:relative; padding:10px 0 10px 40px; border-bottom:1px dashed var(--line);
     font-size:14px; color:var(--paper-dim);
@@ -297,6 +308,26 @@
   .quiz-result{ font-size:14px; color:var(--paper); margin-top:14px; }
   .quiz-score{ font-family:'IBM Plex Mono', monospace; color:var(--gold-bright); }
 
+  .apt-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .apt-timer{ font-family:'IBM Plex Mono', monospace; font-size:22px; color:var(--paper); font-weight:600; }
+  .apt-timer.low{ color:var(--red); }
+  .apt-progress{ font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--paper-dim); }
+  .apt-section-label{ font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--gold-bright); margin-bottom:8px; }
+  .apt-seq{ display:flex; align-items:center; gap:10px; margin:10px 0 20px; flex-wrap:wrap; }
+  .apt-seq-arrow{ color:var(--paper-dim); font-family:'IBM Plex Mono', monospace; font-size:16px; }
+  .apt-seq-box{ background:var(--panel-raised); border:1px solid var(--line); border-radius:var(--radius); padding:6px; display:flex; align-items:center; justify-content:center; }
+  .apt-options-grid{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
+  .apt-option-svg{
+    display:flex; align-items:center; justify-content:center; background:var(--panel-raised); border:1px solid var(--line);
+    border-radius:var(--radius); padding:10px; cursor:pointer; transition:border-color .15s;
+  }
+  .apt-option-svg:hover{ border-color:var(--gold); }
+  .apt-option-svg.correct{ border-color:var(--green); background:rgba(63,122,80,0.1); }
+  .apt-option-svg.incorrect{ border-color:var(--red); background:rgba(179,73,47,0.1); }
+  .apt-result-row{ display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px dashed var(--line); font-size:14px; color:var(--paper-dim); }
+  .apt-result-row strong{ color:var(--paper); }
+  .apt-score-big{ font-family:'IBM Plex Mono', monospace; font-size:42px; color:var(--gold-bright); margin:2px 0 12px; }
+
   textarea{
     width:100%; min-height:160px; background:var(--panel-raised); border:1px solid var(--line); border-radius: var(--radius);
     color:var(--paper); font-family:'IBM Plex Sans', sans-serif; font-size:14px; padding:12px; resize:vertical;
@@ -352,9 +383,10 @@
 
   <div class="tabs">
     <button class="tab-btn active" data-tab="overview">Pathway</button>
+    <button class="tab-btn" data-tab="steps">Steps</button>
     <button class="tab-btn" data-tab="fitness">Fitness</button>
     <button class="tab-btn" data-tab="checklist">Checklist</button>
-    <button class="tab-btn" data-tab="quiz">Quiz</button>
+    <button class="tab-btn" data-tab="quiz">Aptitude test</button>
     <button class="tab-btn" data-tab="notes">Study Notes</button>
     <button class="tab-btn" data-tab="settings">Settings</button>
   </div>
@@ -370,24 +402,49 @@
         <li>Confirm anything important with ADF Careers or the PNG Department of Defence before acting on it.</li>
       </ul>
     </div>
+  </div>
 
-    <details class="card details-card">
-      <summary><h2 style="display:inline;">What the selection process usually looks like</h2></summary>
-      <ol class="stage-list">
-        <li><strong>Application &amp; eligibility check</strong>Citizenship/residency, age, education, and character are reviewed first.</li>
-        <li><strong>Aptitude test</strong>Numeracy, literacy, and reasoning — helps match you to a suitable role.</li>
-        <li><strong>Medical assessment</strong>Health history, vision, hearing, dental, and mental health screening.</li>
-        <li><strong>Fitness test</strong>Push-ups, sit-ups, and a beep test or shuttle run.</li>
-        <li><strong>Interview</strong>A conversation about your motivation and fit for the role.</li>
-        <li><strong>Background checks</strong>Police and reference checks, likely in both countries for this pathway.</li>
-        <li><strong>Offer &amp; enlistment</strong>Your role and training location are confirmed.</li>
+  <!-- STEPS -->
+  <div class="panel" id="panel-steps">
+    <div class="card">
+      <h2>How to join, step by step</h2>
+      <p>The simple version — no jargon, just what happens and roughly what it involves.</p>
+      <ol class="simple-steps">
+        <li>
+          <div class="step-num">1</div>
+          <div><strong>Check you're eligible</strong><span>Right now that mainly means holding Australian permanent residency as a PNG citizen. Confirm your own situation with ADF Careers.</span></div>
+        </li>
+        <li>
+          <div class="step-num">2</div>
+          <div><strong>Apply</strong><span>Submit your application when the pathway is open to you, with your citizenship, education, and character details.</span></div>
+        </li>
+        <li>
+          <div class="step-num">3</div>
+          <div><strong>Sit the aptitude test</strong><span>Verbal, numerical, and abstract reasoning questions under a strict time limit. Practice in the Aptitude test tab.</span></div>
+        </li>
+        <li>
+          <div class="step-num">4</div>
+          <div><strong>Pass the medical check</strong><span>A full health, vision, hearing, dental, and mental health review against ADF standards.</span></div>
+        </li>
+        <li>
+          <div class="step-num">5</div>
+          <div><strong>Pass the fitness test</strong><span>Push-ups, sit-ups, and a beep test or shuttle run. Track your training in the Fitness tab.</span></div>
+        </li>
+        <li>
+          <div class="step-num">6</div>
+          <div><strong>Attend an interview</strong><span>A conversation about why you want to join and whether a role is a good fit for you.</span></div>
+        </li>
+        <li>
+          <div class="step-num">7</div>
+          <div><strong>Background checks</strong><span>Police and reference checks — likely across both PNG and Australia for this pathway.</span></div>
+        </li>
+        <li>
+          <div class="step-num">8</div>
+          <div><strong>Get your offer</strong><span>If you're successful, your role and training location are confirmed and enlistment begins.</span></div>
+        </li>
       </ol>
-    </details>
-
-    <details class="card details-card">
-      <summary><h2 style="display:inline;">Where to check for updates</h2></summary>
-      <p>Keep an eye on the PNG Department of Defence, the Australian Department of Defence, and ADF Careers' official site. Be wary of any site claiming to have an application form for this pathway — as of mid-2026 there's no confirmed direct application process yet.</p>
-    </details>
+      <div class="note-box">Stay updated through the PNG Department of Defence, the Australian Department of Defence, and ADF Careers' official site. Be wary of any site claiming to have an application form for this pathway — as of mid-2026 there's no confirmed direct process yet.</div>
+    </div>
   </div>
 
   <!-- FITNESS -->
@@ -466,12 +523,27 @@
     </div>
   </div>
 
-  <!-- QUIZ -->
+  <!-- QUIZ / APTITUDE TEST -->
   <div class="panel" id="panel-quiz">
-    <div class="card">
-      <h2>Practice quiz</h2>
-      <p>A handful of sample numeracy, verbal, and reasoning questions in the style of a typical aptitude test. Not official ADF material — just a warm-up.</p>
-      <div id="quizArea"></div>
+    <div class="card" id="aptStartCard">
+      <h2>Aptitude test practice</h2>
+      <p>51 questions in 20 minutes — 17 verbal reasoning, 17 numerical reasoning, 17 abstract reasoning. That's about 23.5 seconds a question, so keep moving. There's no penalty for a wrong guess, but a blank answer counts as wrong, so never leave one empty. Questions are freshly generated each time — not official ADF material, just practice in the same format.</p>
+      <button class="primary" id="aptStartBtn">Start test</button>
+    </div>
+
+    <div class="card" id="aptTestCard" style="display:none;">
+      <div class="apt-header">
+        <span class="apt-timer" id="aptTimer">20:00</span>
+        <span class="apt-progress" id="aptProgress"></span>
+      </div>
+      <div class="bar" style="margin-bottom:16px;"><div class="bar-fill" id="aptProgressBar" style="background:var(--gold); width:0%;"></div></div>
+      <div id="aptQuestionArea"></div>
+    </div>
+
+    <div class="card" id="aptResultsCard" style="display:none;">
+      <h2 id="aptResultsHeading">Results</h2>
+      <div id="aptResultsArea"></div>
+      <button class="primary" id="aptRetryBtn">Take another test</button>
     </div>
   </div>
 
@@ -1010,67 +1082,350 @@ function checkReminder(){
   try{ localStorage.setItem('adfprep_lastVisit', today); }catch(err){}
 }
 
-// ---------- Practice quiz ----------
-const QUIZ_QUESTIONS = [
-  { q: "If a supply truck travels 60 km in 1.5 hours, what's its average speed?", options: ["30 km/h", "40 km/h", "45 km/h", "90 km/h"], correct: 1 },
-  { q: "Complete the pattern: 2, 4, 8, 16, __", options: ["20", "24", "32", "18"], correct: 2 },
-  { q: "Choose the word that means the opposite of 'concealed'.", options: ["Hidden", "Visible", "Quiet", "Distant"], correct: 1 },
-  { q: "A patrol has 24 members split into equal groups of 4. How many groups?", options: ["4", "6", "8", "12"], correct: 1 },
-  { q: "Which word does not belong: hammer, wrench, screwdriver, apple?", options: ["Hammer", "Wrench", "Screwdriver", "Apple"], correct: 3 },
-  { q: "'Cautious' most nearly means:", options: ["Careless", "Careful", "Curious", "Confident"], correct: 1 },
-  { q: "If today is Wednesday, what day will it be in 10 days?", options: ["Friday", "Saturday", "Sunday", "Monday"], correct: 1 },
-  { q: "Which shape completes the set: square, pentagon, hexagon, __?", options: ["Triangle", "Heptagon", "Circle", "Oval"], correct: 1 }
+// ---------- Aptitude test: helpers ----------
+function randInt(min, max){ return Math.floor(Math.random() * (max - min + 1)) + min; }
+function shuffleArr(arr){
+  const a = [...arr];
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ---------- Aptitude test: numerical reasoning generators ----------
+function makeNumericOptions(answer){
+  let opts = new Set([answer]);
+  let guard = 0;
+  while(opts.size < 4 && guard < 50){
+    guard++;
+    const spread = Math.max(3, Math.round(Math.abs(answer) * 0.2) + 2);
+    const delta = randInt(1, spread) * (Math.random() < 0.5 ? -1 : 1);
+    const cand = answer + delta;
+    if(cand >= 0 && !opts.has(cand)) opts.add(cand);
+  }
+  const arr = shuffleArr([...opts]);
+  return { options: arr.map(String), correct: arr.indexOf(answer) };
+}
+
+function genMentalMath(){
+  const ops = ['+', '-', '\u00d7', '\u00f7'];
+  const op = ops[randInt(0, 3)];
+  let a, b, answer;
+  if(op === '+'){ a = randInt(12, 89); b = randInt(11, 78); answer = a + b; }
+  else if(op === '-'){ a = randInt(30, 99); b = randInt(5, a - 5); answer = a - b; }
+  else if(op === '\u00d7'){ a = randInt(3, 12); b = randInt(3, 12); answer = a * b; }
+  else { b = randInt(2, 9); answer = randInt(3, 12); a = b * answer; }
+  const { options, correct } = makeNumericOptions(answer);
+  return { section: 'Numerical', type: 'text', prompt: `What is ${a} ${op} ${b}?`, options, correct };
+}
+
+function genNumberPattern(){
+  const start = randInt(2, 20);
+  const isAdd = Math.random() < 0.6;
+  let seq = [start];
+  if(isAdd){ const step = randInt(2, 9); for(let i = 0; i < 4; i++) seq.push(seq[seq.length - 1] + step); }
+  else { const step = randInt(2, 3); for(let i = 0; i < 4; i++) seq.push(seq[seq.length - 1] * step); }
+  const answer = seq[4];
+  const { options, correct } = makeNumericOptions(answer);
+  return { section: 'Numerical', type: 'text', prompt: `What comes next: ${seq.slice(0, 4).join(', ')}, __?`, options, correct };
+}
+
+function genWordProblem(){
+  const templates = [
+    () => { const speed = randInt(30, 90); const time = randInt(2, 6); return { prompt: `A vehicle travels at ${speed} km/h for ${time} hours. How far does it go?`, answer: speed * time }; },
+    () => { let total = randInt(24, 96); const groups = [2, 3, 4, 6, 8][randInt(0, 4)]; total = total - (total % groups); if(total < groups) total = groups * 4; return { prompt: `A squad of ${total} recruits is split into ${groups} equal teams. How many recruits per team?`, answer: total / groups }; },
+    () => { const price = randInt(20, 200); const pct = [10, 20, 25, 50][randInt(0, 3)]; return { prompt: `An item costs $${price}. With a ${pct}% discount, what's the new price?`, answer: Math.round(price - (price * pct / 100)) }; },
+    () => { const a = randInt(5, 40); const b = randInt(5, 40); return { prompt: `A store had ${a} crates and received ${b} more. How many crates in total?`, answer: a + b }; }
+  ];
+  const t = templates[randInt(0, templates.length - 1)]();
+  const { options, correct } = makeNumericOptions(t.answer);
+  return { section: 'Numerical', type: 'text', prompt: t.prompt, options, correct };
+}
+
+function genNumericalQuestion(){
+  const pick = randInt(0, 2);
+  if(pick === 0) return genMentalMath();
+  if(pick === 1) return genNumberPattern();
+  return genWordProblem();
+}
+
+// ---------- Aptitude test: verbal reasoning bank ----------
+const VERBAL_BANK = [
+  { prompt: "Synonym of 'Vigilant':", options: ["Careless", "Watchful", "Tired", "Friendly"], correct: 1 },
+  { prompt: "Synonym of 'Resilient':", options: ["Fragile", "Tough", "Slow", "Quiet"], correct: 1 },
+  { prompt: "Antonym of 'Concealed':", options: ["Hidden", "Visible", "Silent", "Distant"], correct: 1 },
+  { prompt: "Antonym of 'Reluctant':", options: ["Willing", "Hesitant", "Afraid", "Tired"], correct: 0 },
+  { prompt: "Synonym of 'Diligent':", options: ["Lazy", "Hardworking", "Careless", "Quiet"], correct: 1 },
+  { prompt: "Synonym of 'Cautious':", options: ["Careless", "Careful", "Curious", "Confident"], correct: 1 },
+  { prompt: "Soldier is to Squad as Bee is to __?", options: ["Hive", "Nest", "Pack", "Herd"], correct: 0 },
+  { prompt: "Compass is to Direction as Clock is to __?", options: ["Time", "Speed", "Distance", "Weight"], correct: 0 },
+  { prompt: "Antonym of 'Obedient':", options: ["Compliant", "Defiant", "Loyal", "Calm"], correct: 1 },
+  { prompt: "Synonym of 'Endurance':", options: ["Weakness", "Stamina", "Speed", "Fear"], correct: 1 },
+  { prompt: "Map is to Territory as Blueprint is to __?", options: ["Building", "Painting", "River", "Sky"], correct: 0 },
+  { prompt: "Synonym of 'Precise':", options: ["Vague", "Exact", "Slow", "Loud"], correct: 1 },
+  { prompt: "Antonym of 'Fatigued':", options: ["Exhausted", "Energetic", "Weak", "Slow"], correct: 1 },
+  { prompt: "Synonym of 'Commence':", options: ["End", "Begin", "Pause", "Delay"], correct: 1 },
+  { prompt: "Pilot is to Aircraft as Captain is to __?", options: ["Ship", "Car", "Bicycle", "Train"], correct: 0 },
+  { prompt: "Synonym of 'Terminate':", options: ["Start", "End", "Continue", "Delay"], correct: 1 },
+  { prompt: "Antonym of 'Ally':", options: ["Friend", "Enemy", "Partner", "Teammate"], correct: 1 },
+  { prompt: "Synonym of 'Adequate':", options: ["Insufficient", "Sufficient", "Excessive", "Poor"], correct: 1 },
+  { prompt: "Doctor is to Hospital as Teacher is to __?", options: ["School", "Farm", "Office", "Shop"], correct: 0 },
+  { prompt: "Synonym of 'Robust':", options: ["Weak", "Sturdy", "Fragile", "Small"], correct: 1 },
+  { prompt: "Antonym of 'Ascend':", options: ["Rise", "Descend", "Climb", "Jump"], correct: 1 },
+  { prompt: "Synonym of 'Candid':", options: ["Dishonest", "Honest", "Shy", "Angry"], correct: 1 },
+  { prompt: "Key is to Lock as Password is to __?", options: ["Account", "Door", "Car", "Book"], correct: 0 },
+  { prompt: "Synonym of 'Formidable':", options: ["Weak", "Impressive", "Boring", "Tiny"], correct: 1 }
 ];
 
-let quizState = { idx: 0, score: 0, answered: false };
-
-function initQuiz(){
-  quizState = { idx: 0, score: 0, answered: false };
-  renderQuiz();
-}
-
-function renderQuiz(){
-  const area = document.getElementById('quizArea');
-  if(quizState.idx >= QUIZ_QUESTIONS.length){
-    area.innerHTML = `
-      <p class="quiz-result">You scored <span class="quiz-score">${quizState.score} / ${QUIZ_QUESTIONS.length}</span>.</p>
-      <button class="primary" id="quizRetry">Try again</button>
-    `;
-    document.getElementById('quizRetry').addEventListener('click', initQuiz);
-    return;
-  }
-  const q = QUIZ_QUESTIONS[quizState.idx];
-  area.innerHTML = `
-    <div class="quiz-progress">Question ${quizState.idx + 1} of ${QUIZ_QUESTIONS.length} · Score ${quizState.score}</div>
-    <div class="quiz-q">${q.q}</div>
-    <div id="quizOptions"></div>
-  `;
-  const optsWrap = document.getElementById('quizOptions');
-  q.options.forEach((opt, i)=>{
-    const btn = document.createElement('button');
-    btn.className = 'quiz-option';
-    btn.textContent = opt;
-    btn.addEventListener('click', ()=>{
-      if(quizState.answered) return;
-      quizState.answered = true;
-      const buttons = optsWrap.querySelectorAll('.quiz-option');
-      buttons.forEach(b=>b.disabled = true);
-      if(i === q.correct){
-        btn.classList.add('correct');
-        quizState.score++;
-      } else {
-        btn.classList.add('incorrect');
-        buttons[q.correct].classList.add('correct');
-      }
-      setTimeout(()=>{
-        quizState.idx++;
-        quizState.answered = false;
-        renderQuiz();
-      }, 900);
-    });
-    optsWrap.appendChild(btn);
+function pickVerbalQuestions(n){
+  const picked = shuffleArr(VERBAL_BANK).slice(0, n);
+  return picked.map(item => {
+    const order = shuffleArr(item.options.map((opt, i) => ({ opt, isCorrect: i === item.correct })));
+    return {
+      section: 'Verbal', type: 'text', prompt: item.prompt,
+      options: order.map(o => o.opt),
+      correct: order.findIndex(o => o.isCorrect)
+    };
   });
 }
+
+// ---------- Aptitude test: abstract reasoning generators ----------
+function polygonPoints(sides, cx, cy, r, rotationDeg){
+  let pts = [];
+  const rot = rotationDeg * Math.PI / 180;
+  for(let i = 0; i < sides; i++){
+    const angle = rot + i * (2 * Math.PI / sides) - Math.PI / 2;
+    pts.push(`${(cx + r * Math.cos(angle)).toFixed(1)},${(cy + r * Math.sin(angle)).toFixed(1)}`);
+  }
+  return pts.join(' ');
+}
+function triangleSVG(rotation){
+  return `<svg width="52" height="52" viewBox="0 0 60 60"><g transform="rotate(${rotation} 30 30)"><polygon points="30,10 48,46 12,46" fill="none" stroke="var(--gold-bright)" stroke-width="4" stroke-linejoin="round"/></g></svg>`;
+}
+function dotsSVG(count){
+  let circles = '';
+  const spacing = 12;
+  const startX = 30 - ((count - 1) * spacing) / 2;
+  for(let i = 0; i < count; i++){
+    circles += `<circle cx="${startX + i * spacing}" cy="30" r="5" fill="var(--gold-bright)"/>`;
+  }
+  return `<svg width="52" height="52" viewBox="0 0 60 60">${circles}</svg>`;
+}
+function polygonSVG(sides){
+  const pts = polygonPoints(sides, 30, 30, 20, 0);
+  return `<svg width="52" height="52" viewBox="0 0 60 60"><polygon points="${pts}" fill="none" stroke="var(--gold-bright)" stroke-width="4" stroke-linejoin="round"/></svg>`;
+}
+
+function genAbstractRotate(){
+  const step = [45, 90, 135][randInt(0, 2)];
+  const r0 = randInt(0, 7) * 45;
+  const seq = [r0, r0 + step, r0 + 2 * step];
+  const correctVal = (r0 + 3 * step) % 360;
+  const seqSVGs = seq.map(triangleSVG);
+  let distractors = new Set();
+  while(distractors.size < 3){
+    const cand = (r0 + step * randInt(-2, 5)) % 360;
+    const normCand = ((cand % 360) + 360) % 360;
+    if(normCand !== correctVal) distractors.add(normCand);
+  }
+  const optionVals = shuffleArr([correctVal, ...distractors]);
+  return {
+    section: 'Abstract', type: 'abstract',
+    prompt: 'Which shape continues the pattern?',
+    seqSVGs, options: optionVals.map(triangleSVG),
+    correct: optionVals.indexOf(correctVal)
+  };
+}
+function genAbstractCount(){
+  const start = randInt(1, 3);
+  const step = 1;
+  const seq = [start, start + step, start + 2 * step];
+  const correctVal = start + 3 * step;
+  const seqSVGs = seq.map(dotsSVG);
+  let distractors = new Set();
+  while(distractors.size < 3){
+    const cand = correctVal + randInt(-3, 3);
+    if(cand > 0 && cand !== correctVal) distractors.add(cand);
+  }
+  const optionVals = shuffleArr([correctVal, ...distractors]);
+  return {
+    section: 'Abstract', type: 'abstract',
+    prompt: 'How many dots come next in the pattern?',
+    seqSVGs, options: optionVals.map(dotsSVG),
+    correct: optionVals.indexOf(correctVal)
+  };
+}
+function genAbstractSides(){
+  const start = 3;
+  const seq = [start, start + 1, start + 2];
+  const correctVal = start + 3;
+  const seqSVGs = seq.map(polygonSVG);
+  let distractors = new Set();
+  while(distractors.size < 3){
+    const cand = randInt(3, 9);
+    if(cand !== correctVal) distractors.add(cand);
+  }
+  const optionVals = shuffleArr([correctVal, ...distractors]);
+  return {
+    section: 'Abstract', type: 'abstract',
+    prompt: 'Which shape continues the pattern?',
+    seqSVGs, options: optionVals.map(polygonSVG),
+    correct: optionVals.indexOf(correctVal)
+  };
+}
+function genAbstractQuestion(){
+  const pick = randInt(0, 2);
+  if(pick === 0) return genAbstractRotate();
+  if(pick === 1) return genAbstractCount();
+  return genAbstractSides();
+}
+
+// ---------- Aptitude test: engine ----------
+const APT_TOTAL_SECONDS = 20 * 60;
+const APT_PER_SECTION = 17;
+let aptState = null;
+
+function generateAptTest(){
+  const verbalQs = pickVerbalQuestions(APT_PER_SECTION);
+  const numericalQs = Array.from({ length: APT_PER_SECTION }, genNumericalQuestion);
+  const abstractQs = Array.from({ length: APT_PER_SECTION }, genAbstractQuestion);
+  return [...verbalQs, ...numericalQs, ...abstractQs];
+}
+
+function startAptTest(){
+  aptState = {
+    questions: generateAptTest(),
+    idx: 0,
+    answers: new Array(APT_PER_SECTION * 3).fill(null),
+    timeLeft: APT_TOTAL_SECONDS,
+    timerId: null,
+    answered: false
+  };
+  document.getElementById('aptStartCard').style.display = 'none';
+  document.getElementById('aptResultsCard').style.display = 'none';
+  document.getElementById('aptTestCard').style.display = 'block';
+  aptState.timerId = setInterval(aptTick, 1000);
+  updateAptTimer();
+  renderAptQuestion();
+}
+
+function aptTick(){
+  aptState.timeLeft--;
+  updateAptTimer();
+  if(aptState.timeLeft <= 0){
+    finishAptTest();
+  }
+}
+
+function updateAptTimer(){
+  const m = Math.floor(Math.max(0, aptState.timeLeft) / 60);
+  const s = Math.max(0, aptState.timeLeft) % 60;
+  const el = document.getElementById('aptTimer');
+  el.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  el.classList.toggle('low', aptState.timeLeft <= 120);
+}
+
+function renderAptQuestion(){
+  const q = aptState.questions[aptState.idx];
+  const total = aptState.questions.length;
+  document.getElementById('aptProgress').textContent = `Question ${aptState.idx + 1} of ${total}`;
+  document.getElementById('aptProgressBar').style.width = Math.round((aptState.idx / total) * 100) + '%';
+
+  const area = document.getElementById('aptQuestionArea');
+  aptState.answered = false;
+
+  if(q.type === 'abstract'){
+    area.innerHTML = `
+      <div class="apt-section-label">${q.section} reasoning</div>
+      <p class="quiz-q">${q.prompt}</p>
+      <div class="apt-seq">
+        ${q.seqSVGs.map(s => `<div class="apt-seq-box">${s}</div>`).join('<span class="apt-seq-arrow">&#8594;</span>')}
+        <span class="apt-seq-arrow">&#8594;</span>
+        <div class="apt-seq-box" style="color:var(--paper-dim); font-family:'IBM Plex Mono',monospace;">?</div>
+      </div>
+      <div class="apt-options-grid" id="aptOptions"></div>
+    `;
+    const wrap = document.getElementById('aptOptions');
+    q.options.forEach((svg, i) => {
+      const btn = document.createElement('div');
+      btn.className = 'apt-option-svg';
+      btn.innerHTML = svg;
+      btn.addEventListener('click', () => selectAptAnswer(i, wrap, '.apt-option-svg'));
+      wrap.appendChild(btn);
+    });
+  } else {
+    area.innerHTML = `
+      <div class="apt-section-label">${q.section} reasoning</div>
+      <p class="quiz-q">${q.prompt}</p>
+      <div id="aptOptions"></div>
+    `;
+    const wrap = document.getElementById('aptOptions');
+    q.options.forEach((opt, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'quiz-option';
+      btn.textContent = opt;
+      btn.addEventListener('click', () => selectAptAnswer(i, wrap, '.quiz-option'));
+      wrap.appendChild(btn);
+    });
+  }
+}
+
+function selectAptAnswer(i, wrap, selector){
+  if(aptState.answered) return;
+  aptState.answered = true;
+  const q = aptState.questions[aptState.idx];
+  aptState.answers[aptState.idx] = i;
+  const items = wrap.querySelectorAll(selector);
+  items.forEach(el => el.style.pointerEvents = 'none');
+  if(i === q.correct){
+    items[i].classList.add('correct');
+  } else {
+    items[i].classList.add('incorrect');
+    items[q.correct].classList.add('correct');
+  }
+  setTimeout(() => {
+    aptState.idx++;
+    if(aptState.idx >= aptState.questions.length){
+      finishAptTest();
+    } else {
+      renderAptQuestion();
+    }
+  }, 700);
+}
+
+function finishAptTest(){
+  if(aptState.timerId){ clearInterval(aptState.timerId); aptState.timerId = null; }
+  const timedOut = aptState.timeLeft <= 0;
+
+  const bySection = { Verbal: { correct: 0, total: 0 }, Numerical: { correct: 0, total: 0 }, Abstract: { correct: 0, total: 0 } };
+  let totalCorrect = 0;
+  aptState.questions.forEach((q, i) => {
+    bySection[q.section].total++;
+    if(aptState.answers[i] === q.correct){
+      bySection[q.section].correct++;
+      totalCorrect++;
+    }
+  });
+
+  document.getElementById('aptTestCard').style.display = 'none';
+  document.getElementById('aptResultsCard').style.display = 'block';
+  document.getElementById('aptResultsHeading').textContent = timedOut ? "Time's up" : 'Results';
+
+  const total = aptState.questions.length;
+  const rows = Object.keys(bySection).map(sec =>
+    `<div class="apt-result-row"><span>${sec} reasoning</span><strong>${bySection[sec].correct} / ${bySection[sec].total}</strong></div>`
+  ).join('');
+
+  document.getElementById('aptResultsArea').innerHTML = `
+    <div class="apt-score-big">${totalCorrect} / ${total}</div>
+    ${rows}
+    <p style="font-size:12.5px; color:var(--paper-dim); margin-top:12px;">${timedOut ? 'The clock ran out — anything left blank counts as wrong, just like the real thing.' : "Finished with time to spare."}</p>
+  `;
+}
+
+document.getElementById('aptStartBtn').addEventListener('click', startAptTest);
+document.getElementById('aptRetryBtn').addEventListener('click', startAptTest);
 
 function render(){
   inputName.value = state.profile.name || "";
@@ -1083,7 +1438,6 @@ function render(){
   renderFitness();
   renderChecklist();
   renderReadiness();
-  initQuiz();
 }
 
 loadState();
