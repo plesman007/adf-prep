@@ -583,6 +583,12 @@
         <span>Remind me when I open the app</span>
       </label>
     </div>
+    <div class="card" style="border-color:var(--red);">
+      <h2 style="color:var(--red);">Clear all data</h2>
+      <p>Wipes your name, target date, fitness logs, checklist (including custom items), notes, and reminder setting from this device. This can't be undone — download a backup first if you want to keep a copy.</p>
+      <button class="ghost" id="clearDataBtn" style="border-color:var(--red); color:var(--red);">Clear all data</button>
+      <span class="save-flash" id="clearFlash" style="color:var(--red);">Cleared</span>
+    </div>
   </div>
 
   <footer>Stored privately on this device via this artifact's storage — not submitted anywhere. Always verify official requirements with ADF Recruiting / PNG Department of Defence.</footer>
@@ -1058,6 +1064,29 @@ document.getElementById('reminderToggle').addEventListener('change', async (e)=>
   }
   state.reminderEnabled = e.target.checked;
   saveReminder();
+});
+
+// ---------- Clear all data ----------
+document.getElementById('clearDataBtn').addEventListener('click', ()=>{
+  const sure = confirm("This permanently deletes everything you've entered on this device — profile, fitness logs, checklist, notes, and reminder setting. This can't be undone. Continue?");
+  if(!sure) return;
+
+  const keys = [
+    'adfprep_profile', 'adfprep_fitnessLogs', 'adfprep_checklist', 'adfprep_customChecklist',
+    'adfprep_notes', 'adfprep_reminder', 'adfprep_lastVisit'
+  ];
+  keys.forEach(k => { try{ localStorage.removeItem(k); }catch(e){} });
+
+  state.profile = { name: "", targetDate: "", genderProfile: "male" };
+  state.fitnessLogs = [];
+  state.checklist = {};
+  state.customChecklist = [];
+  state.notes = "";
+  state.reminderEnabled = false;
+  state.lastVisit = "";
+
+  render();
+  flash('clearFlash');
 });
 
 function checkReminder(){
